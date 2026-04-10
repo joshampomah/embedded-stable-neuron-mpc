@@ -1,4 +1,4 @@
-#include "condensed_solver/custom_ipm.hpp"
+#include "stable_neuron_solver/custom_ipm.hpp"
 #include <cstring>
 #include <cmath>
 
@@ -16,7 +16,7 @@ static uint32_t get_microseconds_ipm() {
 #define get_microseconds get_microseconds_ipm
 #endif
 
-namespace condensed {
+namespace stable_neuron {
 
 // Static member definitions for G sparsity structure (BSS, not heap).
 int CustomIPM::g_nnz_total_ = 0;
@@ -1007,4 +1007,4 @@ int CustomIPM::solve() {
     return -1;
 }
 
-}  // namespace condensed
+}  // namespace stable_neuron

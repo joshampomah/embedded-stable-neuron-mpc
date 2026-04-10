@@ -1,7 +1,7 @@
 """Embedded MPC Python tooling for closed-loop DBS.
 
 This package provides:
-- Condensed QP solver with neuron elimination (embedded_mpc.solvers.condensed_qp_solver)
+- stability-reduced QP solver with neuron elimination (embedded_mpc.solvers.stable_neuron_qp_solver)
 - Direct QP solver via CLARABEL (embedded_mpc.solvers.direct_qp_solver)
 - PIQP solver backend (embedded_mpc.solvers.piqp_solver)
 - Device configuration (embedded_mpc.config.device_config)

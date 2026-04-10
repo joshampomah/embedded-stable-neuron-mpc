@@ -1,12 +1,12 @@
 #pragma once
 // Synthetic reference test case — demo values, not patient data
 
-#include "condensed_solver/types.hpp"
-#include "condensed_solver/scp_controller.hpp"
+#include "stable_neuron_solver/types.hpp"
+#include "stable_neuron_solver/scp_controller.hpp"
 
 namespace firmware_ref {
 
-using condensed::Scalar;
+using stable_neuron::Scalar;
 
 static constexpr Scalar REF_Q = 3.00000000e+00f;
 static constexpr Scalar REF_R = 2.00000000e+02f;

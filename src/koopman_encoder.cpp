@@ -1,10 +1,10 @@
-#include "condensed_solver/koopman_encoder.hpp"
-#include "condensed_solver/math_ops.hpp"
+#include "stable_neuron_solver/koopman_encoder.hpp"
+#include "stable_neuron_solver/math_ops.hpp"
 
 #include <cmath>
 #include <cstring>
 
-namespace condensed {
+namespace stable_neuron {
 
 void KoopmanEncoder::compute_features(const KScalar* y, const KScalar* u,
                                        KScalar* features) const {
@@ -88,4 +88,4 @@ void KoopmanEncoder::encode(const KScalar* z, KScalar* psi,
     math::matvec_add(phi, weights.proj_weight, features, KD_EXTRA, KN_FEATURES);
 }
 
-}  // namespace condensed
+}  // namespace stable_neuron

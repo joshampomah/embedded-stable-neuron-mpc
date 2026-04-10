@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "embedded-mpc"
 version = "0.1.0"
-description = "Embedded condensed MPC for closed-loop DBS — Python tooling"
+description = "Embedded stable-neuron MPC for closed-loop DBS — Python tooling"
 requires-python = ">=3.10,<3.13"
 license = {text = "MIT"}
 authors = [{name = "Joshua Ampomah"}]

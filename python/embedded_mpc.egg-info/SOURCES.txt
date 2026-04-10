@@ -10,7 +10,7 @@ python/embedded_mpc.egg-info/top_level.txt
 python/embedded_mpc/config/__init__.py
 python/embedded_mpc/config/device_config.py
 python/embedded_mpc/solvers/__init__.py
-python/embedded_mpc/solvers/condensed_qp_solver.py
 python/embedded_mpc/solvers/direct_qp_solver.py
 python/embedded_mpc/solvers/piqp_solver.py
+python/embedded_mpc/solvers/stable_neuron_qp_solver.py
 tests/test_python_solvers.py

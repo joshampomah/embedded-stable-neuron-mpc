@@ -3,10 +3,10 @@
 // Model: dcnn_refined_N5
 // n_state=30, n_hidden=32, n_layers=1, horizon=5
 
-#include "condensed_solver/types.hpp"
-#include "condensed_solver/weights.hpp"
+#include "stable_neuron_solver/types.hpp"
+#include "stable_neuron_solver/weights.hpp"
 
-namespace condensed {
+namespace stable_neuron {
 
 namespace weights_data {
 
@@ -4359,4 +4359,4 @@ inline ModelWeights make_model_weights() {
 
 inline const ModelWeights g_model_weights = make_model_weights();
 
-}  // namespace condensed
+}  // namespace stable_neuron

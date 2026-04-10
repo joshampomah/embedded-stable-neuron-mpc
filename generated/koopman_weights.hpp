@@ -3,9 +3,9 @@
 // Model: koopman_log_N7_lasso46
 // encoder=lasso46, d_lift=76, horizon=7
 
-#include "condensed_solver/koopman_types.hpp"
+#include "stable_neuron_solver/koopman_types.hpp"
 
-namespace condensed {
+namespace stable_neuron {
 namespace koopman_weights_data {
 
 // Encoder projection: (46 x 46)
@@ -406,4 +406,4 @@ inline KoopmanWeights make_koopman_weights() {
 
 inline const KoopmanWeights g_koopman_weights = make_koopman_weights();
 
-}  // namespace condensed
+}  // namespace stable_neuron

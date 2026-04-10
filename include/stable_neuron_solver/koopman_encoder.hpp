@@ -10,9 +10,9 @@
 //
 // All operations are pure arithmetic — no neural network forward pass.
 
-#include "condensed_solver/koopman_types.hpp"
+#include "stable_neuron_solver/koopman_types.hpp"
 
-namespace condensed {
+namespace stable_neuron {
 
 class KoopmanEncoder {
 public:
@@ -28,4 +28,4 @@ private:
     void compute_features(const KScalar* y, const KScalar* u, KScalar* features) const;
 };
 
-}  // namespace condensed
+}  // namespace stable_neuron

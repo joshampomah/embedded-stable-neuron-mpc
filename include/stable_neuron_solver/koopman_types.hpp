@@ -6,7 +6,7 @@
 #include "koopman_config.hpp"  // Generated: D_LIFT, HORIZON, N_FEATURES, etc.
 #include <cstdint>
 
-namespace condensed {
+namespace stable_neuron {
 
 // Koopman model dimensions (from generated config)
 constexpr int KN = koopman_config::HORIZON;
@@ -17,7 +17,7 @@ constexpr int KD_LIFT = koopman_config::D_LIFT;
 constexpr int KD_EXTRA = koopman_config::D_EXTRA;
 constexpr int KN_FEATURES = koopman_config::N_FEATURES;
 
-// QP dimensions (fixed — no ambiguous neurons)
+// QP dimensions (fixed — no unstable neurons)
 constexpr int KN_VARS = 2 * KN;          // [u(N), t(N)]
 constexpr int KN_INEQ = 6 * KN;          // tracking + nonneg + box_lo + box_hi + rate_up + rate_dn
 
@@ -64,4 +64,4 @@ struct KoopmanResult {
     float ipm_mu_final;
 };
 
-}  // namespace condensed
+}  // namespace stable_neuron

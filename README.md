@@ -1,18 +1,18 @@
-# embedded-condensed-mpc
+# embedded-stable-neuron-mpc
 
-Embedded C++/Python condensed QP solver for closed-loop deep brain stimulation (DBS).
+Embedded C++/Python stability-reduced QP solver for closed-loop deep brain stimulation (DBS).
 
 Implements two MPC controllers targeting the STM32L476RG (Cortex-M4F, 80 MHz, 128 KB SRAM):
 
 | Controller | Model | QP type | Typical solve time |
 |---|---|---|---|
-| **DCNN-MPC** | Input-Convex Neural Network (5-step horizon) | Condensed SCP | ~4 ms |
+| **DCNN-MPC** | Input-Convex Neural Network (5-step horizon) | stability-reduced SCP | ~4 ms |
 | **Koopman-MPC** | Lifted-linear dynamics (7-step horizon) | Single QP | ~0.22 ms |
 
 ## Repository structure
 
 ```
-include/condensed_solver/   C++ solver headers
+include/stable_neuron_solver/   C++ solver headers
 src/                        C++ solver sources
 firmware/                   STM32 bare-metal firmware
 test/                       HIL test binaries (stdin/stdout protocol)
@@ -58,8 +58,8 @@ cmake --build build-arm -j4
 
 ## Key design decisions
 
-- **Neuron elimination**: Interval arithmetic over rate-constrained control bounds classifies ~96% of ICNN neurons as safe-active or safe-inactive, reducing the QP from ~670 variables to ~25-50.
-- **Custom Mehrotra IPM**: A hand-coded interior point method (no dynamic allocation, no exceptions) runs the condensed QP on bare metal in 4 ms.
+- **Stable neuron elimination**: Interval arithmetic over rate-constrained control bounds classifies ~96% of ICNN neurons as stable-active or stable-inactive, reducing the QP from ~670 variables to ~25-50.
+- **Custom Mehrotra IPM**: A hand-coded interior point method (no dynamic allocation, no exceptions) runs the stability-reduced QP on bare metal in 4 ms.
 - **Koopman linearization**: 46 LASSO-selected analytical features lift the 30-dim state to a space where dynamics are (approximately) linear, enabling a single QP per timestep.
 - **float32 throughout**: All embedded computations use `float` (FPU-accelerated VMLA.F32 on Cortex-M4F).
 

@@ -18,7 +18,7 @@ generated values** for demonstration purposes. They do not represent any trained
 model or patient data.
 
 To use this solver with a real model, you must supply your own trained weights
-in the format described in `include/condensed_solver/weights.hpp`.
+in the format described in `include/stable_neuron_solver/weights.hpp`.
 
 ## No Warranty
 

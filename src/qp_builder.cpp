@@ -1,4 +1,4 @@
-#include "condensed_solver/qp_builder.hpp"
+#include "stable_neuron_solver/qp_builder.hpp"
 #include <Eigen/Dense>
 #include <algorithm>
 #include <cstring>
@@ -16,7 +16,7 @@ static uint32_t get_microseconds() {
 }
 #endif
 
-namespace condensed {
+namespace stable_neuron {
 
 using Eigen::Map;
 using Eigen::Matrix;
@@ -68,7 +68,7 @@ void QPBuilder::classify_and_setup(
 void QPBuilder::build_variable_layout() {
     int offset = N_FIXED_VARS;  // After u, s_max, s_min, t
 
-    // y_f variables: only if last layer has ambiguous neurons
+    // y_f variables: only if last layer has unstable neurons
     // Cap at MAX_Y_F_VARS to stay within total variable budget.
     for (int step = 0; step < N; ++step) {
         for (int net_idx = 0; net_idx < N_NETWORKS; ++net_idx) {
@@ -76,7 +76,7 @@ void QPBuilder::build_variable_layout() {
             const auto& cls = classifier_.get(step, net_idx, last_layer);
             bool has_amb = false;
             for (int j = 0; j < N_HIDDEN; ++j) {
-                if (cls.status[j] == static_cast<int8_t>(NeuronStatus::AMBIGUOUS)) {
+                if (cls.status[j] == static_cast<int8_t>(NeuronStatus::UNSTABLE)) {
                     has_amb = true;
                     break;
                 }
@@ -90,26 +90,26 @@ void QPBuilder::build_variable_layout() {
         }
     }
 
-    // Ambiguous neuron variables.
-    // Cap at MAX_AMB_VARS to ensure epigraph constraints fit within
+    // unstable neuron variables.
+    // Cap at MAX_UNSTABLE_VARS to ensure epigraph constraints fit within
     // MAX_STATIC_INEQ (each amb var generates 2 epigraph rows).
-    // Neurons beyond the budget are treated as safe-active (conservative).
-    int n_amb_assigned = 0;
-    int n_amb_total = 0;  // Total ambiguous (before capping)
-    std::memset(amb_var_idx_, -1, sizeof(amb_var_idx_));
+    // Neurons beyond the budget are treated as stable-active (conservative).
+    int n_unstable_assigned = 0;
+    int n_unstable_total = 0;  // Total unstable (before capping)
+    std::memset(unstable_var_idx_, -1, sizeof(unstable_var_idx_));
     for (int step = 0; step < N; ++step) {
         for (int net_idx = 0; net_idx < N_NETWORKS; ++net_idx) {
             for (int layer = 0; layer < N_LAYERS; ++layer) {
                 const auto& cls = classifier_.get(step, net_idx, layer);
                 for (int j = 0; j < N_HIDDEN; ++j) {
-                    if (cls.status[j] == static_cast<int8_t>(NeuronStatus::AMBIGUOUS)) {
-                        n_amb_total++;
-                        if (n_amb_assigned < MAX_AMB_VARS && offset < MAX_VARS) {
-                            amb_var_idx_[step][net_idx][layer][j] = offset;
+                    if (cls.status[j] == static_cast<int8_t>(NeuronStatus::UNSTABLE)) {
+                        n_unstable_total++;
+                        if (n_unstable_assigned < MAX_UNSTABLE_VARS && offset < MAX_VARS) {
+                            unstable_var_idx_[step][net_idx][layer][j] = offset;
                             offset++;
-                            n_amb_assigned++;
+                            n_unstable_assigned++;
                         }
-                        // else: treated as safe-active (amb_var_idx_ stays -1)
+                        // else: treated as stable-active (unstable_var_idx_ stays -1)
                     }
                 }
             }
@@ -117,8 +117,8 @@ void QPBuilder::build_variable_layout() {
     }
 
     n_vars_ = offset;
-    n_amb_ = n_amb_assigned;
-    n_amb_total_ = n_amb_total;
+    n_unstable_ = n_unstable_assigned;
+    n_unstable_total_ = n_unstable_total;
 }
 
 // =========================================================================
@@ -150,18 +150,18 @@ void QPBuilder::precompute_neuron_exprs(
             std::memset(layer_coeffs_[cur], 0, sizeof(Scalar) * N_HIDDEN * nv);
 
             for (int j = 0; j < N_HIDDEN; ++j) {
-                if (cls0.status[j] == static_cast<int8_t>(NeuronStatus::SAFE_ACTIVE)) {
+                if (cls0.status[j] == static_cast<int8_t>(NeuronStatus::STABLE_ACTIVE)) {
                     layer_const_[cur][j] = c0[j];
                     for (int m = 0; m < n_u; ++m) {
                         layer_coeffs_[cur][m * N_HIDDEN + j] = W0_u[m * N_HIDDEN + j];
                     }
-                } else if (cls0.status[j] == static_cast<int8_t>(NeuronStatus::AMBIGUOUS)) {
-                    int vi = amb_var_idx_[step][net_idx][0][j];
+                } else if (cls0.status[j] == static_cast<int8_t>(NeuronStatus::UNSTABLE)) {
+                    int vi = unstable_var_idx_[step][net_idx][0][j];
                     if (vi >= 0 && vi < nv) {
                         layer_coeffs_[cur][vi * N_HIDDEN + j] = Scalar(1);
                     }
                 }
-                // SAFE_INACTIVE: h = 0, already zero
+                // STABLE_INACTIVE: h = 0, already zero
             }
 
             // === Internal layers ===
@@ -182,10 +182,10 @@ void QPBuilder::precompute_neuron_exprs(
                 std::memcpy(layer_const_[cur], skip_c, sizeof(Scalar) * N_HIDDEN);
                 std::memset(layer_coeffs_[cur], 0, sizeof(Scalar) * N_HIDDEN * nv);
 
-                // Accumulate Wx * prev for SAFE_ACTIVE/AMBIGUOUS previous neurons
+                // Accumulate Wx * prev for STABLE_ACTIVE/unstable previous neurons
                 for (int j = 0; j < N_HIDDEN; ++j) {
                     auto s = prev_cls.status[j];
-                    if (s == static_cast<int8_t>(NeuronStatus::SAFE_ACTIVE)) {
+                    if (s == static_cast<int8_t>(NeuronStatus::STABLE_ACTIVE)) {
                         // const += Wx.col(j) * prev_c[j]
                         const Scalar pj = prev_c[j];
                         const Scalar* Wx_j = Wx + j * N_HIDDEN;
@@ -202,8 +202,8 @@ void QPBuilder::precompute_neuron_exprs(
                                 dst[r] += Wx_j2[r] * vjc;
                             }
                         }
-                    } else if (s == static_cast<int8_t>(NeuronStatus::AMBIGUOUS)) {
-                        int vi = amb_var_idx_[step][net_idx][layer][j];
+                    } else if (s == static_cast<int8_t>(NeuronStatus::UNSTABLE)) {
+                        int vi = unstable_var_idx_[step][net_idx][layer][j];
                         if (vi >= 0 && vi < nv) {
                             const Scalar* Wx_j = Wx + j * N_HIDDEN;
                             Scalar* dst = layer_coeffs_[cur] + vi * N_HIDDEN;
@@ -212,7 +212,7 @@ void QPBuilder::precompute_neuron_exprs(
                             }
                         }
                     }
-                    // SAFE_INACTIVE: zero row, skip
+                    // STABLE_INACTIVE: zero row, skip
                 }
 
                 // Add skip connection u terms (columns 0..n_u-1)
@@ -224,15 +224,15 @@ void QPBuilder::precompute_neuron_exprs(
                     }
                 }
 
-                // Apply current-layer classification: keep SAFE_ACTIVE, fix others
+                // Apply current-layer classification: keep STABLE_ACTIVE, fix others
                 int curr_layer = layer + 1;
                 const auto& cls = classifier_.get(step, net_idx, curr_layer);
 
                 for (int j = 0; j < N_HIDDEN; ++j) {
-                    if (cls.status[j] == static_cast<int8_t>(NeuronStatus::SAFE_ACTIVE)) {
+                    if (cls.status[j] == static_cast<int8_t>(NeuronStatus::STABLE_ACTIVE)) {
                         // Keep pre-activation values as-is
-                    } else if (cls.status[j] == static_cast<int8_t>(NeuronStatus::AMBIGUOUS)) {
-                        int vi = amb_var_idx_[step][net_idx][curr_layer][j];
+                    } else if (cls.status[j] == static_cast<int8_t>(NeuronStatus::UNSTABLE)) {
+                        int vi = unstable_var_idx_[step][net_idx][curr_layer][j];
                         layer_const_[cur][j] = Scalar(0);
                         for (int c = 0; c < nv; ++c) {
                             layer_coeffs_[cur][c * N_HIDDEN + j] = Scalar(0);
@@ -241,7 +241,7 @@ void QPBuilder::precompute_neuron_exprs(
                             layer_coeffs_[cur][vi * N_HIDDEN + j] = Scalar(1);
                         }
                     } else {
-                        // SAFE_INACTIVE: zero
+                        // STABLE_INACTIVE: zero
                         layer_const_[cur][j] = Scalar(0);
                         for (int c = 0; c < nv; ++c) {
                             layer_coeffs_[cur][c * N_HIDDEN + j] = Scalar(0);
@@ -448,8 +448,8 @@ void QPBuilder::add_icnn_epigraph(
         const auto& cls = classifier_.get(step, net_idx, 0);
 
         for (int j = 0; j < N_HIDDEN; ++j) {
-            if (cls.status[j] != static_cast<int8_t>(NeuronStatus::AMBIGUOUS)) continue;
-            int h_idx = amb_var_idx_[step][net_idx][0][j];
+            if (cls.status[j] != static_cast<int8_t>(NeuronStatus::UNSTABLE)) continue;
+            int h_idx = unstable_var_idx_[step][net_idx][0][j];
             if (h_idx < 0) continue;
 
             if (row_out >= MAX_INEQ) return;
@@ -479,11 +479,11 @@ void QPBuilder::add_icnn_epigraph(
     for (int layer = 0; layer < N_INTERNAL; ++layer) {
         int curr_layer = layer + 1;
 
-        // Early-exit: skip entire layer if no ambiguous neurons
+        // Early-exit: skip entire layer if no unstable neurons
         const auto& cls = classifier_.get(step, net_idx, curr_layer);
         bool has_amb = false;
         for (int j = 0; j < N_HIDDEN; ++j) {
-            if (cls.status[j] == static_cast<int8_t>(NeuronStatus::AMBIGUOUS)) {
+            if (cls.status[j] == static_cast<int8_t>(NeuronStatus::UNSTABLE)) {
                 has_amb = true;
                 break;
             }
@@ -514,13 +514,13 @@ void QPBuilder::add_icnn_epigraph(
             Map<const VectorHidden> c0_l(classifier_.get_c0(step, net_idx));
 
             for (int j = 0; j < N_HIDDEN; ++j) {
-                if (prev_cls.status[j] == static_cast<int8_t>(NeuronStatus::SAFE_ACTIVE)) {
+                if (prev_cls.status[j] == static_cast<int8_t>(NeuronStatus::STABLE_ACTIVE)) {
                     prev_c_buf[j] = c0_l(j);
                     for (int m = 0; m < n_u; ++m) {
                         prev_v_buf[m * N_HIDDEN + j] = W0_u_l(j, m);  // Column-major
                     }
-                } else if (prev_cls.status[j] == static_cast<int8_t>(NeuronStatus::AMBIGUOUS)) {
-                    int vi = amb_var_idx_[step][net_idx][0][j];
+                } else if (prev_cls.status[j] == static_cast<int8_t>(NeuronStatus::UNSTABLE)) {
+                    int vi = unstable_var_idx_[step][net_idx][0][j];
                     if (vi >= 0 && vi < nv)
                         prev_v_buf[vi * N_HIDDEN + j] = Scalar(1);  // Column-major
                 }
@@ -534,8 +534,8 @@ void QPBuilder::add_icnn_epigraph(
         Matrix<Scalar, N_HIDDEN, Eigen::Dynamic> pre_coeffs = Wx * pvv;
 
         for (int j = 0; j < N_HIDDEN; ++j) {
-            if (cls.status[j] != static_cast<int8_t>(NeuronStatus::AMBIGUOUS)) continue;
-            int h_idx = amb_var_idx_[step][net_idx][curr_layer][j];
+            if (cls.status[j] != static_cast<int8_t>(NeuronStatus::UNSTABLE)) continue;
+            int h_idx = unstable_var_idx_[step][net_idx][curr_layer][j];
             if (h_idx < 0) continue;
 
             if (row_out >= MAX_INEQ) return;
@@ -717,4 +717,4 @@ QPData QPBuilder::build_qp(
     return data;
 }
 
-}  // namespace condensed
+}  // namespace stable_neuron

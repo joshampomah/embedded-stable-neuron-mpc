@@ -1,10 +1,10 @@
 #pragma once
 
-#include "condensed_solver/config.hpp"
-#include "condensed_solver/types.hpp"
-#include "condensed_solver/weights.hpp"
+#include "stable_neuron_solver/config.hpp"
+#include "stable_neuron_solver/types.hpp"
+#include "stable_neuron_solver/weights.hpp"
 
-namespace condensed {
+namespace stable_neuron {
 
 // Compute df/du for one ICNN network (B matrix only, not A = df/dstate).
 //
@@ -36,4 +36,4 @@ Scalar icnn_forward_and_jacobian_u_cached(
     const Scalar* u, int n_u,
     const NetworkWeights& w, Scalar* out_J);
 
-}  // namespace condensed
+}  // namespace stable_neuron

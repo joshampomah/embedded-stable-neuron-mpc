@@ -1,26 +1,26 @@
 #pragma once
 
-#include "condensed_solver/config.hpp"
-#include "condensed_solver/types.hpp"
-#include "condensed_solver/weights.hpp"
-#include "condensed_solver/qp_builder.hpp"
+#include "stable_neuron_solver/config.hpp"
+#include "stable_neuron_solver/types.hpp"
+#include "stable_neuron_solver/weights.hpp"
+#include "stable_neuron_solver/qp_builder.hpp"
 
-namespace condensed {
+namespace stable_neuron {
 
-// Top-level condensed QP solver: QPBuilder + PIQP dense.
+// Top-level stability-reduced QP solver: QPBuilder + PIQP dense.
 //
 // Lifecycle:
 //   1. configure() — set Q, R, constraint parameters
 //   2. classify_and_setup() — when z_k or u_prev changes (new MPC timestep)
 //   3. solve() — per SCP iteration (warm-starts if same timestep)
-class CondensedSolver {
+class StableNeuronSolver {
 public:
-    CondensedSolver();
-    ~CondensedSolver();
+    StableNeuronSolver();
+    ~StableNeuronSolver();
 
     // Non-copyable (owns PIQP solver)
-    CondensedSolver(const CondensedSolver&) = delete;
-    CondensedSolver& operator=(const CondensedSolver&) = delete;
+    StableNeuronSolver(const StableNeuronSolver&) = delete;
+    StableNeuronSolver& operator=(const StableNeuronSolver&) = delete;
 
     // Configure parameters
     void configure(
@@ -52,7 +52,7 @@ public:
     );
 
     int n_vars() const { return builder_.n_vars(); }
-    int n_amb() const { return builder_.n_amb(); }
+    int n_unstable() const { return builder_.n_unstable(); }
 
     // Access classifier for cached z-dependent constants
     const NeuronClassifier& classifier() const { return builder_.classifier(); }
@@ -81,4 +81,4 @@ private:
     Scalar prev_x_[MAX_VARS];
 };
 
-}  // namespace condensed
+}  // namespace stable_neuron

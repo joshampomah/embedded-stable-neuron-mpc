@@ -1,7 +1,7 @@
 Metadata-Version: 2.4
 Name: embedded-mpc
 Version: 0.1.0
-Summary: Embedded condensed MPC for closed-loop DBS — Python tooling
+Summary: Embedded stable-neuron MPC for closed-loop DBS — Python tooling
 Author: Joshua Ampomah
 License: MIT
 Requires-Python: <3.13,>=3.10

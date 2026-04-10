@@ -14,7 +14,7 @@
 //
 // Build: cmake --build build-desktop && ./build-desktop/hil_solver
 
-#include "condensed_solver/scp_controller.hpp"
+#include "stable_neuron_solver/scp_controller.hpp"
 #include "network_weights.hpp"
 
 #include <chrono>
@@ -27,7 +27,7 @@
 #include <io.h>
 #endif
 
-using namespace condensed;
+using namespace stable_neuron;
 
 static SCPController g_controller;
 

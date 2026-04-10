@@ -1,9 +1,9 @@
-#include "condensed_solver/neuron_classifier.hpp"
-#include "condensed_solver/math_ops.hpp"
+#include "stable_neuron_solver/neuron_classifier.hpp"
+#include "stable_neuron_solver/math_ops.hpp"
 #include <algorithm>
 #include <cmath>
 
-namespace condensed {
+namespace stable_neuron {
 
 using math::vec_zero;
 using math::vec_copy;
@@ -101,11 +101,11 @@ static inline void classify_neurons(
 {
     for (int j = 0; j < N_HIDDEN; ++j) {
         if (a_min[j] > margin) {
-            res.status[j] = static_cast<int8_t>(NeuronStatus::SAFE_ACTIVE);
+            res.status[j] = static_cast<int8_t>(NeuronStatus::STABLE_ACTIVE);
         } else if (a_max[j] < -margin) {
-            res.status[j] = static_cast<int8_t>(NeuronStatus::SAFE_INACTIVE);
+            res.status[j] = static_cast<int8_t>(NeuronStatus::STABLE_INACTIVE);
         } else {
-            res.status[j] = static_cast<int8_t>(NeuronStatus::AMBIGUOUS);
+            res.status[j] = static_cast<int8_t>(NeuronStatus::UNSTABLE);
         }
         res.h_min[j] = std::max(a_min[j], Scalar(0));
         res.h_max[j] = std::max(a_max[j], Scalar(0));
@@ -194,4 +194,4 @@ void NeuronClassifier::classify_network(
     }
 }
 
-}  // namespace condensed
+}  // namespace stable_neuron

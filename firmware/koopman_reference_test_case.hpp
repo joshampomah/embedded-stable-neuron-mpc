@@ -1,8 +1,8 @@
 #pragma once
 // Synthetic Koopman reference test case — demo values, not patient data
-#include "condensed_solver/koopman_types.hpp"
+#include "stable_neuron_solver/koopman_types.hpp"
 namespace koopman_ref {
-using condensed::KScalar;
+using stable_neuron::KScalar;
 static constexpr KScalar REF_Q = 3.00000000e+00f;
 static constexpr KScalar REF_R = 2.00000000e+02f;
 static constexpr KScalar REF_BETA_0 = 2.30000000e+00f;

@@ -9,7 +9,7 @@
 //     CONFIG ACK: single byte 0x01
 //     SOLVE resp: 7×f32 u_optimal + u8 qp_iters + u32 time_us = 33 bytes
 
-#include "condensed_solver/koopman_controller.hpp"
+#include "stable_neuron_solver/koopman_controller.hpp"
 #include "koopman_weights.hpp"
 
 #include <chrono>
@@ -17,7 +17,7 @@
 #include <cstdio>
 #include <cstring>
 
-using namespace condensed;
+using namespace stable_neuron;
 
 static KoopmanController g_controller;
 

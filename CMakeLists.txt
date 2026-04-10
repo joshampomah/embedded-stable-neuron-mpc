@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(condensed_qp_solver CXX)
+project(stable_neuron_qp_solver CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -81,9 +81,9 @@ if(EMBEDDED_TARGET)
 endif()
 
 # ==============================================================================
-# Condensed QP Solver Library (DCNN SCP)
+# stability-reduced QP Solver Library (DCNN SCP)
 # ==============================================================================
-add_library(condensed_solver
+add_library(stable_neuron_solver
     src/neuron_classifier.cpp
     src/qp_builder.cpp
     src/solver.cpp
@@ -101,22 +101,22 @@ add_library(koopman_solver
 )
 
 if(USE_CUSTOM_IPM)
-    target_sources(condensed_solver PRIVATE src/custom_ipm.cpp)
-    target_compile_definitions(condensed_solver PRIVATE USE_CUSTOM_IPM)
+    target_sources(stable_neuron_solver PRIVATE src/custom_ipm.cpp)
+    target_compile_definitions(stable_neuron_solver PRIVATE USE_CUSTOM_IPM)
     target_sources(koopman_solver PRIVATE src/custom_ipm.cpp)
     target_compile_definitions(koopman_solver PRIVATE USE_CUSTOM_IPM)
 endif()
 
 set(GENERATED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/generated" CACHE PATH "Directory with generated model headers")
 
-target_include_directories(condensed_solver PUBLIC
+target_include_directories(stable_neuron_solver PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${GENERATED_DIR}
 )
 
-target_link_libraries(condensed_solver PUBLIC Eigen3::Eigen)
+target_link_libraries(stable_neuron_solver PUBLIC Eigen3::Eigen)
 if(NOT USE_CUSTOM_IPM)
-    target_link_libraries(condensed_solver PUBLIC piqp)
+    target_link_libraries(stable_neuron_solver PUBLIC piqp)
 endif()
 
 target_include_directories(koopman_solver PUBLIC
@@ -129,7 +129,7 @@ if(NOT USE_CUSTOM_IPM)
 endif()
 
 if(EMBEDDED_TARGET)
-    target_compile_options(condensed_solver PRIVATE
+    target_compile_options(stable_neuron_solver PRIVATE
         -fno-exceptions -fno-rtti
     )
     target_compile_options(koopman_solver PRIVATE
@@ -165,11 +165,11 @@ endif()
 # ==============================================================================
 if(NOT CMAKE_CROSSCOMPILING)
     add_executable(test_solver test/hil_main.cpp)
-    target_link_libraries(test_solver PRIVATE condensed_solver)
+    target_link_libraries(test_solver PRIVATE stable_neuron_solver)
 
     # HIL solver binary (stdin/stdout pipe for closed-loop testing)
     add_executable(hil_solver test/hil_main.cpp)
-    target_link_libraries(hil_solver PRIVATE condensed_solver)
+    target_link_libraries(hil_solver PRIVATE stable_neuron_solver)
 
     # Koopman HIL solver binary
     add_executable(hil_koopman test/hil_koopman.cpp)
@@ -195,7 +195,7 @@ if(EMBEDDED_TARGET AND CMAKE_CROSSCOMPILING)
     )
 
     target_link_libraries(firmware PRIVATE
-        condensed_solver
+        stable_neuron_solver
         cmsis
     )
 

@@ -8,10 +8,10 @@
 //   s.t. Ax = b       (p <= MAX_EQ equalities, via PMM penalty)
 //        Gx + s = h   (m <= MAX_INEQ inequalities, s >= 0)
 
-#include "condensed_solver/config.hpp"
-#include "condensed_solver/types.hpp"  // Scalar
+#include "stable_neuron_solver/config.hpp"
+#include "stable_neuron_solver/types.hpp"  // Scalar
 
-namespace condensed {
+namespace stable_neuron {
 
 // Max inequalities for IPM: original + equality pairs from conversion
 static constexpr int MAX_INEQ_IPM = MAX_INEQ + 2 * MAX_EQ;  // 93
@@ -203,4 +203,4 @@ private:
     Scalar delta_cur_;                // dual regularization: w = z/(s + delta*z) ≤ 1/delta
 };
 
-}  // namespace condensed
+}  // namespace stable_neuron

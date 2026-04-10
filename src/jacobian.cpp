@@ -1,9 +1,9 @@
-#include "condensed_solver/jacobian.hpp"
-#include "condensed_solver/math_ops.hpp"
+#include "stable_neuron_solver/jacobian.hpp"
+#include "stable_neuron_solver/math_ops.hpp"
 
 #include <algorithm>
 
-namespace condensed {
+namespace stable_neuron {
 
 using namespace math;
 
@@ -206,4 +206,4 @@ Scalar icnn_forward_and_jacobian_u_cached(
     return y;
 }
 
-}  // namespace condensed
+}  // namespace stable_neuron

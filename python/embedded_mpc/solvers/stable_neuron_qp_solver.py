@@ -1,13 +1,13 @@
-# Canonical owner: embedded-condensed-mpc
-"""Condensed QP solver for DC-MPC with safe neuron elimination.
+# Canonical owner: embedded-stable-neuron-mpc
+"""stability-reduced QP solver for DC-MPC with stable neuron elimination.
 
 Reduces the QP from ~670 variables to ~25-50 by classifying ICNN neurons as
-safe-active (always on), safe-inactive (always off), or ambiguous (needs
-epigraph variable). Only ambiguous neurons get QP variables.
+stable-active (always on), stable-inactive (always off), or unstable (needs
+epigraph variable). Only unstable neurons get QP variables.
 
 Method:
   For each neuron, interval arithmetic over rate-constrained u bounds
-  determines if the neuron's activation can flip. ~96% of neurons are safe,
+  determines if the neuron's activation can flip. ~96% of neurons are stable,
   so the reduced QP is dramatically smaller.
 
 Uses PIQP dense solver with warm-starting between SCP iterations.
@@ -39,11 +39,11 @@ def classify_neurons(
     delta_u_max: float,
     margin: float = 1e-4,
 ) -> dict:
-    """Classify all ICNN neurons as safe-active, safe-inactive, or ambiguous.
+    """Classify all ICNN neurons as stable-active, stable-inactive, or unstable.
 
     Returns:
         Dict keyed by (step, net_idx, layer) -> {
-            'status': int8 array (1=safe-active, -1=safe-inactive, 0=ambiguous),
+            'status': int8 array (1=stable-active, -1=stable-inactive, 0=unstable),
             'h_min': post-ReLU lower bounds,
             'h_max': post-ReLU upper bounds,
         }
@@ -143,12 +143,12 @@ def _classify_network(
 
 
 # =============================================================================
-# Condensed QP Builder (vectorized numpy)
+# stability-reduced QP Builder (vectorized numpy)
 # =============================================================================
 
 
-class CondensedQPBuilder:
-    """Builds a reduced QP with only ambiguous neurons as variables.
+class StableNeuronQPBuilder:
+    """Builds a reduced QP with only unstable neurons as variables.
 
     Variable layout: [u(N), s_max(N), s_min(N), t(N), y_f1?(<=N), y_f2?(<=N),
                       h_amb_1, h_amb_2, ...]
@@ -219,7 +219,7 @@ class CondensedQPBuilder:
         self._y_f_info = {}
         self._amb_vars = {}
 
-        # y_f variables: only if last layer has ambiguous neurons
+        # y_f variables: only if last layer has unstable neurons
         for step in range(N):
             for net_idx in range(2):
                 last_layer = self.n_layers - 1
@@ -230,7 +230,7 @@ class CondensedQPBuilder:
                 else:
                     self._y_f_info[(step, net_idx)] = {"is_var": False, "var_idx": None}
 
-        # Ambiguous neuron variables
+        # unstable neuron variables
         for step in range(N):
             for net_idx in range(2):
                 for layer in range(self.n_layers):
@@ -302,15 +302,15 @@ class CondensedQPBuilder:
         h_const = np.zeros(n_hidden)
         h_coeffs = np.zeros((n_hidden, n_vars))
 
-        # Safe-active: h[j] = c0[j] + W0_u[j,:] @ u
+        # Stable-active: h[j] = c0[j] + W0_u[j,:] @ u
         active = (status == 1)
         h_const[active] = c0[active]
         # W0_u[j, m] goes into h_coeffs[j, m] (u variables are indices 0..N-1)
         h_coeffs[np.ix_(active, np.arange(n_u))] = W0_u[active, :]
 
-        # Safe-inactive: h[j] = 0 (already zero)
+        # Stable-inactive: h[j] = 0 (already zero)
 
-        # Ambiguous: h[j] = 0 + 1.0 * x[var_idx]
+        # unstable: h[j] = 0 + 1.0 * x[var_idx]
         amb_mask = (status == 0)
         for j in np.where(amb_mask)[0]:
             var_idx = self._amb_vars[(step, net_idx, 0, int(j))]
@@ -348,14 +348,14 @@ class CondensedQPBuilder:
             h_const_l = np.zeros(n_hidden)
             h_coeffs_l = np.zeros((n_hidden, n_vars))
 
-            # Safe-active: h = pre_activation (pass through)
+            # Stable-active: h = pre_activation (pass through)
             active = (status_curr == 1)
             h_const_l[active] = pre_const[active]
             h_coeffs_l[active, :] = pre_coeffs[active, :]
 
-            # Safe-inactive: h = 0 (already zero)
+            # Stable-inactive: h = 0 (already zero)
 
-            # Ambiguous: h = x[var_idx]
+            # unstable: h = x[var_idx]
             amb_mask = (status_curr == 0)
             for j in np.where(amb_mask)[0]:
                 var_idx = self._amb_vars[(step, net_idx, curr_layer, int(j))]
@@ -491,7 +491,7 @@ class CondensedQPBuilder:
             row = np.zeros(n_vars); row[2*N+i] = 1.0; row[N+i] = -1.0
             static_rows.append(row); static_rhs.append(0.0)
 
-        # ICNN epigraph constraints (ambiguous neurons only)
+        # ICNN epigraph constraints (unstable neurons only)
         for step in range(N):
             n_u = step + 1
             for net_idx in range(2):
@@ -514,7 +514,7 @@ class CondensedQPBuilder:
 
     def _add_icnn_epigraph_vec(self, step, net_idx, weights, z_k, n_u,
                                 rows_list, rhs_list):
-        """Add epigraph constraints for ambiguous neurons using vectorized exprs."""
+        """Add epigraph constraints for unstable neurons using vectorized exprs."""
         n_hidden = self.n_hidden
         n_state = self.n_state
         n_vars = self.n_vars
@@ -603,7 +603,7 @@ class CondensedQPBuilder:
         linear_jacobians: List[np.ndarray] = None,
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray,
                np.ndarray, np.ndarray, np.ndarray]:
-        """Build the condensed QP matrices (dense numpy arrays).
+        """Build the stability-reduced QP matrices (dense numpy arrays).
 
         Returns P (upper tri), q, A_eq, b_eq, A_ineq, h_lo, h_hi.
         """
@@ -698,14 +698,14 @@ class CondensedQPBuilder:
 
 
 # =============================================================================
-# Condensed PIQP Solver (Dense)
+# Stability-reduced PIQP Solver (Dense)
 # =============================================================================
 
 
-class CondensedPIQPSolver:
-    """Condensed QP solver using PIQP dense with neuron elimination."""
+class StableNeuronPIQPSolver:
+    """stability-reduced QP solver using PIQP dense with neuron elimination."""
 
-    def __init__(self, builder: CondensedQPBuilder):
+    def __init__(self, builder: StableNeuronQPBuilder):
         self._builder = builder
         self._solver = None
         self._first_solve = True
@@ -731,7 +731,7 @@ class CondensedPIQPSolver:
         W_bounds: np.ndarray,
         linear_jacobians: List[np.ndarray] = None,
     ) -> DirectQPSolution:
-        """Solve the condensed QP."""
+        """Solve the stability-reduced QP."""
         import piqp
 
         start = time.perf_counter()
@@ -817,19 +817,19 @@ class CondensedPIQPSolver:
 
 
 # =============================================================================
-# Condensed ProxQP Solver (Dense)
+# Stability-reduced ProxQP Solver (Dense)
 # =============================================================================
 
 
-class CondensedProxQPSolver:
-    """Condensed QP solver using ProxQP dense with neuron elimination.
+class StableNeuronProxQPSolver:
+    """stability-reduced QP solver using ProxQP dense with neuron elimination.
 
-    WARNING: ProxQP's ADMM algorithm diverges on the condensed QP structure
+    WARNING: ProxQP's ADMM algorithm diverges on the stability-reduced QP structure
     (PSD Hessian with zero-cost epigraph variables) regardless of regularization.
-    Use CondensedPIQPSolver or CondensedDAQPSolver instead.
+    Use StableNeuronPIQPSolver or StableNeuronDAQPSolver instead.
     """
 
-    def __init__(self, builder: CondensedQPBuilder):
+    def __init__(self, builder: StableNeuronQPBuilder):
         self._builder = builder
         self._solver = None
         self._first_solve = True
@@ -855,7 +855,7 @@ class CondensedProxQPSolver:
         W_bounds: np.ndarray,
         linear_jacobians: List[np.ndarray] = None,
     ) -> DirectQPSolution:
-        """Solve the condensed QP using ProxQP dense."""
+        """Solve the stability-reduced QP using ProxQP dense."""
         import proxsuite
 
         start = time.perf_counter()
@@ -942,14 +942,14 @@ class CondensedProxQPSolver:
 
 
 # =============================================================================
-# Condensed DAQP Solver (Dense active-set)
+# Stability-reduced DAQP Solver (Dense active-set)
 # =============================================================================
 
 
-class CondensedDAQPSolver:
-    """Condensed QP solver using DAQP dense active-set with neuron elimination."""
+class StableNeuronDAQPSolver:
+    """stability-reduced QP solver using DAQP dense active-set with neuron elimination."""
 
-    def __init__(self, builder: CondensedQPBuilder):
+    def __init__(self, builder: StableNeuronQPBuilder):
         self._builder = builder
         self._prev_z_k = None
         self._prev_u_prev = None
@@ -973,7 +973,7 @@ class CondensedDAQPSolver:
         W_bounds: np.ndarray,
         linear_jacobians: List[np.ndarray] = None,
     ) -> DirectQPSolution:
-        """Solve the condensed QP using DAQP."""
+        """Solve the stability-reduced QP using DAQP."""
         import daqp
 
         start = time.perf_counter()
@@ -1058,8 +1058,8 @@ class CondensedDAQPSolver:
 # =============================================================================
 
 
-def create_condensed_solver(predictor, config, backend: str = "piqp"):
-    """Factory function to create a condensed QP solver from predictor and config.
+def create_stable_neuron_solver(predictor, config, backend: str = "piqp"):
+    """Factory function to create a stability-reduced QP solver from predictor and config.
 
     Args:
         predictor: MultiStepDCNN model.
@@ -1067,15 +1067,15 @@ def create_condensed_solver(predictor, config, backend: str = "piqp"):
         backend: Dense QP solver backend - "piqp", "proxqp", or "daqp".
 
     Returns:
-        CondensedPIQPSolver, CondensedProxQPSolver, or CondensedDAQPSolver.
+        StableNeuronPIQPSolver, StableNeuronProxQPSolver, or StableNeuronDAQPSolver.
     """
     try:
         from dcnn_tube_mpc.analysis.jacobian import extract_weights_from_convex_nn
     except ImportError as exc:
         raise ImportError(
-            "create_condensed_solver requires dcnn-tube-mpc-dbs to be installed. "
+            "create_stable_neuron_solver requires dcnn-tube-mpc-dbs to be installed. "
             "Install it with: pip install -e path/to/dcnn-tube-mpc-dbs  "
-            "Or use CondensedQPBuilder directly with pre-extracted weights."
+            "Or use StableNeuronQPBuilder directly with pre-extracted weights."
         ) from exc
 
     N_ctrl = getattr(config, "control_horizon", config.prediction_horizon)
@@ -1084,7 +1084,7 @@ def create_condensed_solver(predictor, config, backend: str = "piqp"):
         import warnings
         warnings.warn(
             f"Extended horizon (N_ctrl={N_ctrl} < N_pred={N_pred}) not supported "
-            "by condensed solver. Falling back to CVXPY solver."
+            "by stability-reduced solver. Falling back to CVXPY solver."
         )
         return None
 
@@ -1100,7 +1100,7 @@ def create_condensed_solver(predictor, config, backend: str = "piqp"):
         for i in range(N)
     ]
 
-    builder = CondensedQPBuilder(
+    builder = StableNeuronQPBuilder(
         N=N, n_state=n_state,
         weights_f1=weights_f1, weights_f2=weights_f2,
         Q=config.Q, R=config.R,
@@ -1113,9 +1113,9 @@ def create_condensed_solver(predictor, config, backend: str = "piqp"):
     )
 
     solver_map = {
-        "piqp": CondensedPIQPSolver,
-        "proxqp": CondensedProxQPSolver,
-        "daqp": CondensedDAQPSolver,
+        "piqp": StableNeuronPIQPSolver,
+        "proxqp": StableNeuronProxQPSolver,
+        "daqp": StableNeuronDAQPSolver,
     }
-    solver_cls = solver_map.get(backend, CondensedPIQPSolver)
+    solver_cls = solver_map.get(backend, StableNeuronPIQPSolver)
     return solver_cls(builder)

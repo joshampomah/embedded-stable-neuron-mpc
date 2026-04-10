@@ -1,14 +1,14 @@
 #pragma once
 
-#include "condensed_solver/config.hpp"
-#include "condensed_solver/types.hpp"
-#include "condensed_solver/weights.hpp"
+#include "stable_neuron_solver/config.hpp"
+#include "stable_neuron_solver/types.hpp"
+#include "stable_neuron_solver/weights.hpp"
 
-namespace condensed {
+namespace stable_neuron {
 
 // Neuron classification via interval arithmetic.
 // Determines which ICNN neurons are always active, always inactive,
-// or ambiguous over the rate-constrained control input set.
+// or unstable over the rate-constrained control input set.
 class NeuronClassifier {
 public:
     NeuronClassifier() = default;
@@ -17,7 +17,7 @@ public:
     // z_k: current state (N_STATE,)
     // u_prev: previous control input
     // u_min, u_max, delta_u_max: constraint parameters
-    // margin: classification margin (neurons within margin of 0 are ambiguous)
+    // margin: classification margin (neurons within margin of 0 are unstable)
     void classify(
         const Scalar* z_k,
         Scalar u_prev,
@@ -66,4 +66,4 @@ private:
     Scalar skip_const_cache_[N][N_NETWORKS][N_INTERNAL][N_HIDDEN];
 };
 
-}  // namespace condensed
+}  // namespace stable_neuron

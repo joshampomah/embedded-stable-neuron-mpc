@@ -1,7 +1,7 @@
-#include "condensed_solver/solver.hpp"
+#include "stable_neuron_solver/solver.hpp"
 
 #ifdef USE_CUSTOM_IPM
-#include "condensed_solver/custom_ipm.hpp"
+#include "stable_neuron_solver/custom_ipm.hpp"
 #else
 // PIQP headers
 #include "piqp/piqp.hpp"
@@ -32,11 +32,11 @@ static uint32_t get_microseconds() {
 }
 #endif
 
-namespace condensed {
+namespace stable_neuron {
 
 #ifdef USE_CUSTOM_IPM
 
-struct CondensedSolver::PiqpImpl {
+struct StableNeuronSolver::PiqpImpl {
     CustomIPM solver;
 };
 
@@ -44,17 +44,17 @@ struct CondensedSolver::PiqpImpl {
 
 using Eigen::Map;
 
-struct CondensedSolver::PiqpImpl {
+struct StableNeuronSolver::PiqpImpl {
     piqp::DenseSolver<Scalar> solver;
 };
 
 #endif  // USE_CUSTOM_IPM
 
-CondensedSolver::CondensedSolver()
+StableNeuronSolver::StableNeuronSolver()
     : piqp_(nullptr), last_nv_(-1), last_ne_(-1), last_ni_(-1),
       has_prev_x_(false), prev_nv_(0) {}
 
-CondensedSolver::~CondensedSolver() {
+StableNeuronSolver::~StableNeuronSolver() {
 #if defined(EMBEDDED_TARGET) && defined(__arm__)
     // Bump allocator: free is a no-op, no cleanup needed
 #else
@@ -62,7 +62,7 @@ CondensedSolver::~CondensedSolver() {
 #endif
 }
 
-void CondensedSolver::configure(
+void StableNeuronSolver::configure(
     Scalar Q, Scalar R, Scalar R_delta,
     Scalar tube_weight, Scalar beta_0,
     Scalar u_min, Scalar u_max, Scalar delta_u_max,
@@ -74,7 +74,7 @@ void CondensedSolver::configure(
     last_nv_ = -1;
 }
 
-void CondensedSolver::classify_and_setup(
+void StableNeuronSolver::classify_and_setup(
     const Scalar* z_k,
     Scalar u_prev,
     const ModelWeights& weights)
@@ -82,7 +82,7 @@ void CondensedSolver::classify_and_setup(
     builder_.classify_and_setup(z_k, u_prev, weights);
 }
 
-SolverResult CondensedSolver::solve(
+SolverResult StableNeuronSolver::solve(
     const Scalar* z_k,
     Scalar u_prev,
     const Scalar* u_nominal,
@@ -122,7 +122,7 @@ SolverResult CondensedSolver::solve(
         result.is_feasible = false;
         result.cost = Scalar(1e30);
         result.n_vars = nv;
-        result.n_amb = builder_.n_amb();
+        result.n_unstable = builder_.n_unstable();
         std::memset(result.u_optimal, 0, sizeof(Scalar) * N);
         std::memset(result.s_max_optimal, 0, sizeof(Scalar) * N);
         std::memset(result.s_min_optimal, 0, sizeof(Scalar) * N);
@@ -187,7 +187,7 @@ SolverResult CondensedSolver::solve(
     result.n_vars = nv;
     result.n_eq = ne;
     result.n_ineq = ni;
-    result.n_amb = builder_.n_amb();
+    result.n_unstable = builder_.n_unstable();
     result.piqp_status = status;
     result.piqp_iters = ipm_result.iter;
     result.diag_q0 = qp.q[0];
@@ -235,8 +235,8 @@ SolverResult CondensedSolver::solve(
 
 #ifndef EMBEDDED_TARGET
         if (solve_count_++ < 3) {
-            fprintf(stderr, "[DIAG] nv=%d ne=%d ni=%d n_amb=%d/%d iters=%d status=%d\n",
-                    nv, ne, ni, builder_.n_amb(), builder_.n_amb_total(),
+            fprintf(stderr, "[DIAG] nv=%d ne=%d ni=%d n_unstable=%d/%d iters=%d status=%d\n",
+                    nv, ne, ni, builder_.n_unstable(), builder_.n_unstable_total(),
                     ipm_result.iter, ipm_result.status);
             fprintf(stderr, "  u=[");
             for (int i = 0; i < N; ++i) fprintf(stderr, "%.6f%s", x[i], i<N-1?",":"");
@@ -365,7 +365,7 @@ SolverResult CondensedSolver::solve(
     result.n_vars = nv;
     result.n_eq = ne;
     result.n_ineq = ni;
-    result.n_amb = builder_.n_amb();
+    result.n_unstable = builder_.n_unstable();
     result.piqp_status = static_cast<int>(status);
     result.piqp_iters = static_cast<int>(piqp_->solver.result().info.iter);
     result.diag_q0 = qp.q[0];
@@ -403,4 +403,4 @@ SolverResult CondensedSolver::solve(
     return result;
 }
 
-}  // namespace condensed
+}  // namespace stable_neuron

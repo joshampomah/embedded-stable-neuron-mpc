@@ -2,9 +2,9 @@
 
 #include <cstdint>
 #include <Eigen/Dense>
-#include "condensed_solver/config.hpp"
+#include "stable_neuron_solver/config.hpp"
 
-namespace condensed {
+namespace stable_neuron {
 
 // Precision: float32 on embedded (hardware FPU), double on desktop (match Python)
 #ifdef EMBEDDED_TARGET
@@ -27,9 +27,9 @@ using MatrixXRM = Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::R
 
 // Neuron classification status
 enum class NeuronStatus : int8_t {
-    SAFE_INACTIVE = -1,
-    AMBIGUOUS = 0,
-    SAFE_ACTIVE = 1,
+    STABLE_INACTIVE = -1,
+    UNSTABLE = 0,
+    STABLE_ACTIVE = 1,
 };
 
 // Classification result for one (step, net, layer)
@@ -55,7 +55,7 @@ struct SolverResult {
     int n_vars;
     int n_eq;
     int n_ineq;
-    int n_amb;
+    int n_unstable;
     int piqp_status;   // PIQP status code (1=solved, -1=max_iter, -8=numerics, etc.)
     int piqp_iters;    // PIQP internal iteration count
     Scalar diag_q0;    // q[0] for debugging QP matrix comparison
@@ -99,4 +99,4 @@ struct QPData {
     const Scalar* h_hi;    // (n_ineq)
 };
 
-}  // namespace condensed
+}  // namespace stable_neuron

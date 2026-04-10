@@ -3,10 +3,10 @@
 // Lightweight C-style math operations for embedded (no Eigen dependency).
 // All matrices are column-major: M[row, col] = M[col * rows + row].
 
-#include "condensed_solver/config.hpp"
+#include "stable_neuron_solver/config.hpp"
 #include <cstring>
 
-namespace condensed {
+namespace stable_neuron {
 
 // Precision type (match types.hpp without pulling in Eigen)
 #ifdef EMBEDDED_TARGET
@@ -85,4 +85,4 @@ static inline void gemm(MathScalar* C, const MathScalar* A, const MathScalar* B,
 }
 
 }  // namespace math
-}  // namespace condensed
+}  // namespace stable_neuron

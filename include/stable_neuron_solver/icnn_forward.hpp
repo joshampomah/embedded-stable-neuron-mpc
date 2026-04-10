@@ -1,10 +1,10 @@
 #pragma once
 
-#include "condensed_solver/config.hpp"
-#include "condensed_solver/types.hpp"
-#include "condensed_solver/weights.hpp"
+#include "stable_neuron_solver/config.hpp"
+#include "stable_neuron_solver/types.hpp"
+#include "stable_neuron_solver/weights.hpp"
 
-namespace condensed {
+namespace stable_neuron {
 
 // Compute f(x) for one ICNN network given state z_k and control sequence u.
 //
@@ -30,4 +30,4 @@ Scalar icnn_forward_cached(const Scalar* c0, const Scalar* const* skip_const,
                            const Scalar* u, int n_u,
                            const NetworkWeights& w);
 
-}  // namespace condensed
+}  // namespace stable_neuron

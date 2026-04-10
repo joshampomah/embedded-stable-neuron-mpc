@@ -1,6 +1,6 @@
-#include "condensed_solver/scp_controller.hpp"
-#include "condensed_solver/icnn_forward.hpp"
-#include "condensed_solver/jacobian.hpp"
+#include "stable_neuron_solver/scp_controller.hpp"
+#include "stable_neuron_solver/icnn_forward.hpp"
+#include "stable_neuron_solver/jacobian.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -19,7 +19,7 @@ static uint32_t get_microseconds() {
 }
 #endif
 
-namespace condensed {
+namespace stable_neuron {
 
 void SCPController::configure(const SCPParams& params, const Scalar* W_bounds) {
     params_ = params;
@@ -350,4 +350,4 @@ SCPResult SCPController::solve(const Scalar* z_k, Scalar u_prev,
 template SCPResult SCPController::solve<false>(const Scalar*, Scalar, const ModelWeights&);
 template SCPResult SCPController::solve<true>(const Scalar*, Scalar, const ModelWeights&);
 
-}  // namespace condensed
+}  // namespace stable_neuron

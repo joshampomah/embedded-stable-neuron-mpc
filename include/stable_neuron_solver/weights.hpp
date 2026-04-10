@@ -1,9 +1,9 @@
 #pragma once
 
-#include "condensed_solver/config.hpp"
-#include "condensed_solver/types.hpp"
+#include "stable_neuron_solver/config.hpp"
+#include "stable_neuron_solver/types.hpp"
 
-namespace condensed {
+namespace stable_neuron {
 
 // Weight arrays for one ICNN network at one prediction step.
 // All arrays are stored in column-major order (Eigen default).
@@ -37,4 +37,4 @@ struct ModelWeights {
 // Declared in generated/network_weights.hpp, defined by export script
 extern const ModelWeights g_model_weights;
 
-}  // namespace condensed
+}  // namespace stable_neuron

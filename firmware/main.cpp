@@ -9,13 +9,13 @@
 
 #include "board.hpp"
 #include "reference_test_case.hpp"
-#include "condensed_solver/scp_controller.hpp"
+#include "stable_neuron_solver/scp_controller.hpp"
 #include "network_weights.hpp"
 
 #include <cmath>
 #include <cstring>
 
-using namespace condensed;
+using namespace stable_neuron;
 using namespace board;
 using namespace firmware_ref;
 
@@ -61,8 +61,8 @@ int main() {
     // Memory sizes
     uart_printf("sizeof(SCPController)  = %u bytes\n",
                 static_cast<unsigned>(sizeof(SCPController)));
-    uart_printf("sizeof(CondensedSolver)= %u bytes\n",
-                static_cast<unsigned>(sizeof(CondensedSolver)));
+    uart_printf("sizeof(StableNeuronSolver)= %u bytes\n",
+                static_cast<unsigned>(sizeof(StableNeuronSolver)));
     uart_printf("sizeof(Scalar)         = %u bytes (%s)\n",
                 static_cast<unsigned>(sizeof(Scalar)),
                 sizeof(Scalar) == 4 ? "float" : "double");

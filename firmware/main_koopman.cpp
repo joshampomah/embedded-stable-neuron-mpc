@@ -9,14 +9,14 @@
 
 #include "board.hpp"
 #include "koopman_reference_test_case.hpp"
-#include "condensed_solver/koopman_controller.hpp"
+#include "stable_neuron_solver/koopman_controller.hpp"
 #include "koopman_weights.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <cstring>
 
-using namespace condensed;
+using namespace stable_neuron;
 using namespace board;
 using namespace koopman_ref;
 

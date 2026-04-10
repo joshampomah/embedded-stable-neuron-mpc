@@ -1,13 +1,13 @@
 #pragma once
 
-#include "condensed_solver/config.hpp"
-#include "condensed_solver/types.hpp"
-#include "condensed_solver/weights.hpp"
-#include "condensed_solver/neuron_classifier.hpp"
+#include "stable_neuron_solver/config.hpp"
+#include "stable_neuron_solver/types.hpp"
+#include "stable_neuron_solver/weights.hpp"
+#include "stable_neuron_solver/neuron_classifier.hpp"
 
-namespace condensed {
+namespace stable_neuron {
 
-// Builds the reduced QP with only ambiguous neurons as variables.
+// Builds the reduced QP with only unstable neurons as variables.
 //
 // Variable layout: [u(N), s_max(N), s_min(N), t(N), y_f1?(<=N), y_f2?(<=N),
 //                   h_amb_1, h_amb_2, ...]
@@ -61,8 +61,8 @@ public:
     );
 
     int n_vars() const { return n_vars_; }
-    int n_amb() const { return n_amb_; }
-    int n_amb_total() const { return n_amb_total_; }
+    int n_unstable() const { return n_unstable_; }
+    int n_unstable_total() const { return n_unstable_total_; }
 
     // Access classifier for cached z-dependent constants
     const NeuronClassifier& classifier() const { return classifier_; }
@@ -93,7 +93,7 @@ private:
     void precompute_static_constraints(const Scalar* z_k, Scalar u_prev,
                                        const ModelWeights& weights);
 
-    // Add epigraph constraints for ambiguous neurons of one network
+    // Add epigraph constraints for unstable neurons of one network
     void add_icnn_epigraph(int step, int net_idx,
                            const NetworkWeights& nw,
                            const Scalar* z_k, int n_u,
@@ -108,11 +108,11 @@ private:
 
     // --- Variable layout ---
     int n_vars_;
-    int n_amb_;
-    int n_amb_total_;  // Total ambiguous (before capping at MAX_AMB_VARS)
+    int n_unstable_;
+    int n_unstable_total_;  // Total unstable (before capping at MAX_UNSTABLE_VARS)
     YFInfo y_f_info_[N][N_NETWORKS];
-    // Ambiguous neuron variable index: -1 if not ambiguous
-    int amb_var_idx_[N][N_NETWORKS][N_LAYERS][N_HIDDEN];
+    // unstable neuron variable index: -1 if not unstable
+    int unstable_var_idx_[N][N_NETWORKS][N_LAYERS][N_HIDDEN];
 
     // --- Neuron expressions (output only — layer exprs use ping-pong) ---
     // output_const_[step][net_idx]: constant part of network output
@@ -148,4 +148,4 @@ private:
     ClassifyTiming classify_timing_;
 };
 
-}  // namespace condensed
+}  // namespace stable_neuron

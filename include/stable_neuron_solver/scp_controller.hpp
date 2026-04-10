@@ -1,11 +1,11 @@
 #pragma once
 
-#include "condensed_solver/config.hpp"
-#include "condensed_solver/types.hpp"
-#include "condensed_solver/weights.hpp"
-#include "condensed_solver/solver.hpp"
+#include "stable_neuron_solver/config.hpp"
+#include "stable_neuron_solver/types.hpp"
+#include "stable_neuron_solver/weights.hpp"
+#include "stable_neuron_solver/solver.hpp"
 
-namespace condensed {
+namespace stable_neuron {
 
 // SCP algorithm parameters
 struct SCPParams {
@@ -94,7 +94,7 @@ struct SCPResult {
 //   2. classify_and_setup (once per timestep)
 //   3. SCP loop:
 //      a. Compute analytical Jacobians df1/du, df2/du (also gets predictions)
-//      b. Solve condensed QP
+//      b. Solve stability-reduced QP
 //      c. Check convergence: |u_opt-u_nom|_inf < delta_u_tol (adaptive) OR |delta_J| < delta_J_min
 //      d. Update u_nominal, recompute predictions
 //   4. Return u_optimal[0..N-1]
@@ -115,7 +115,7 @@ public:
                     const ModelWeights& weights);
 
 private:
-    CondensedSolver qp_solver_;
+    StableNeuronSolver qp_solver_;
     SCPParams params_;
     Scalar W_bounds_[N * 2];
 
@@ -144,4 +144,4 @@ private:
 extern template SCPResult SCPController::solve<false>(const Scalar*, Scalar, const ModelWeights&);
 extern template SCPResult SCPController::solve<true>(const Scalar*, Scalar, const ModelWeights&);
 
-}  // namespace condensed
+}  // namespace stable_neuron

@@ -1,4 +1,4 @@
-"""Tests for Python solver modules in embedded-condensed-mpc."""
+"""Tests for Python solver modules in embedded-stable-neuron-mpc."""
 from __future__ import annotations
 
 import importlib
@@ -12,19 +12,19 @@ import numpy as np
 
 
 def test_direct_qp_solver_import():
-    """condensed_qp_solver imports without error."""
+    """stable_neuron_qp_solver imports without error."""
     from embedded_mpc.solvers import direct_qp_solver  # noqa: F401
     assert hasattr(direct_qp_solver, "DirectQPSolution")
     assert hasattr(direct_qp_solver, "QPMatrixBuilder")
     assert hasattr(direct_qp_solver, "DirectQPSolver")
 
 
-def test_condensed_qp_solver_import():
-    """condensed_qp_solver imports without error."""
-    from embedded_mpc.solvers import condensed_qp_solver  # noqa: F401
-    assert hasattr(condensed_qp_solver, "CondensedQPBuilder")
-    assert hasattr(condensed_qp_solver, "classify_neurons")
-    assert hasattr(condensed_qp_solver, "CondensedPIQPSolver")
+def test_stable_neuron_qp_solver_import():
+    """stable_neuron_qp_solver imports without error."""
+    from embedded_mpc.solvers import stable_neuron_qp_solver  # noqa: F401
+    assert hasattr(stable_neuron_qp_solver, "StableNeuronQPBuilder")
+    assert hasattr(stable_neuron_qp_solver, "classify_neurons")
+    assert hasattr(stable_neuron_qp_solver, "StableNeuronPIQPSolver")
 
 
 def test_piqp_solver_import():
@@ -107,9 +107,9 @@ def test_qp_matrix_builder_setup():
     assert builder.A_ineq is not None
 
 
-def test_condensed_qp_builder_classify():
-    """CondensedQPBuilder classifies neurons without error."""
-    from embedded_mpc.solvers.condensed_qp_solver import CondensedQPBuilder
+def test_stable_neuron_qp_builder_classify():
+    """StableNeuronQPBuilder classifies neurons without error."""
+    from embedded_mpc.solvers.stable_neuron_qp_solver import StableNeuronQPBuilder
 
     N = 2
     n_state = 5
@@ -118,7 +118,7 @@ def test_condensed_qp_builder_classify():
     weights_f1 = [_make_dummy_weights(n_state, n_hidden, i + 1) for i in range(N)]
     weights_f2 = [_make_dummy_weights(n_state, n_hidden, i + 1) for i in range(N)]
 
-    builder = CondensedQPBuilder(
+    builder = StableNeuronQPBuilder(
         N=N,
         n_state=n_state,
         weights_f1=weights_f1,

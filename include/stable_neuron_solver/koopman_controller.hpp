@@ -16,10 +16,10 @@
 //   - No Jacobian computation (F is constant)
 //   - Smaller QP: 2N vars, 6N constraints (vs ~24 vars, ~60 constraints)
 
-#include "condensed_solver/koopman_types.hpp"
-#include "condensed_solver/koopman_encoder.hpp"
+#include "stable_neuron_solver/koopman_types.hpp"
+#include "stable_neuron_solver/koopman_encoder.hpp"
 
-namespace condensed {
+namespace stable_neuron {
 
 class KoopmanController {
 public:
@@ -72,4 +72,4 @@ private:
 extern template KoopmanResult KoopmanController::solve<false>(const KScalar*, KScalar, const KoopmanWeights&);
 extern template KoopmanResult KoopmanController::solve<true>(const KScalar*, KScalar, const KoopmanWeights&);
 
-}  // namespace condensed
+}  // namespace stable_neuron

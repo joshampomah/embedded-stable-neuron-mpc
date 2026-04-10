@@ -1,5 +1,5 @@
-#include "condensed_solver/koopman_controller.hpp"
-#include "condensed_solver/math_ops.hpp"
+#include "stable_neuron_solver/koopman_controller.hpp"
+#include "stable_neuron_solver/math_ops.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -20,12 +20,12 @@ static uint32_t get_microseconds() {
 
 // Use custom IPM directly (same solver as DCNN, reusable for any dense QP)
 #ifdef USE_CUSTOM_IPM
-#include "condensed_solver/custom_ipm.hpp"
+#include "stable_neuron_solver/custom_ipm.hpp"
 #else
 #include <piqp/piqp.hpp>
 #endif
 
-namespace condensed {
+namespace stable_neuron {
 
 KoopmanController::KoopmanController() : has_previous_(false) {
     std::memset(prev_u_optimal_, 0, sizeof(prev_u_optimal_));
@@ -330,4 +330,4 @@ KoopmanResult KoopmanController::solve(const KScalar* z_k, KScalar u_prev,
 template KoopmanResult KoopmanController::solve<false>(const KScalar*, KScalar, const KoopmanWeights&);
 template KoopmanResult KoopmanController::solve<true>(const KScalar*, KScalar, const KoopmanWeights&);
 
-}  // namespace condensed
+}  // namespace stable_neuron

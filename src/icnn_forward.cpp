@@ -1,9 +1,9 @@
-#include "condensed_solver/icnn_forward.hpp"
-#include "condensed_solver/math_ops.hpp"
+#include "stable_neuron_solver/icnn_forward.hpp"
+#include "stable_neuron_solver/math_ops.hpp"
 
 #include <algorithm>
 
-namespace condensed {
+namespace stable_neuron {
 
 using namespace math;
 
@@ -79,4 +79,4 @@ Scalar icnn_forward_cached(const Scalar* c0, const Scalar* const* skip_const,
     return vec_dot(w.W_out, h, N_HIDDEN) + w.b_out;
 }
 
-}  // namespace condensed
+}  // namespace stable_neuron
