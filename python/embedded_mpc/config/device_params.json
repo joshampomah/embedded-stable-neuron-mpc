@@ -1,0 +1,56 @@
+{
+  "_comment": "Device and System Parameters - Single Source of Truth. All values in SI units.",
+  "_note": "Units mismatch resolved - using k=62.11 from CDC24 paper directly",
+  "version": "1.0",
+
+  "stimulation": {
+    "gain": 62.11,
+    "tau1": 0.05,
+    "tau2": 0.25
+  },
+
+  "sampling": {
+    "time": 0.02,
+    "frequency": 50
+  },
+
+  "constraints": {
+    "u_max": 0.030,
+    "u_min": 0.0,
+    "delta_u_max": 0.0024,
+    "_comment_u_max": "CDC25 paper maximum (k=62.11 from CDC24 paper)",
+    "_comment_delta_u_max": "0.25s ramp time (12.5 steps @ 20ms), equivalent to u̇_max=12.0/s scaled"
+  },
+
+  "beta": {
+    "default_threshold": 2.3,
+    "ar_coefficients": [0.8841947, -0.48365191, 0.1060174, 0.09196347, -0.02555821],
+    "noise_std": 0.0012,
+    "bias": 0.015
+  },
+
+  "mpc": {
+    "prediction_horizon": 5,
+    "Q": 50000.0,
+    "R": 1.0,
+    "R_delta": 0.0,
+    "maxiters": 10,
+    "delta_J_min": 1e-5
+  },
+
+  "kalman": {
+    "gamma_base": 1e-4,
+    "gamma_beta_factor": 10,
+    "R_meas": 0.01
+  },
+
+  "disturbance_bounds": [
+    [-0.13, 0.13],
+    [-0.30, 0.30],
+    [-0.45, 0.45],
+    [-0.57, 0.57],
+    [-0.64, 0.64]
+  ],
+
+  "patients": {}
+}

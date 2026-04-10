@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata below."
+type: software
+title: "embedded-condensed-mpc: Embedded Condensed QP Solver for Closed-Loop DBS"
+version: 0.1.0
+date-released: "2025-01-01"
+license: MIT
+authors:
+  - family-names: Ampomah
+    given-names: Joshua
+abstract: >
+  A condensed Model Predictive Control solver targeting embedded microcontrollers
+  (STM32L476RG Cortex-M4F) for closed-loop deep brain stimulation. Implements
+  both a DC-programming SCP solver for Input-Convex Neural Networks (DCNN-MPC)
+  and a Koopman operator-based linear QP solver (Koopman-MPC). Includes Python
+  tooling for offline profiling and benchmarking.
+keywords:
+  - model predictive control
+  - deep brain stimulation
+  - embedded systems
+  - convex optimization
+  - Koopman operator
+  - neural network
+  - QP solver
