@@ -4,10 +4,10 @@ Embedded C++/Python stability-reduced QP solver for closed-loop deep brain stimu
 
 Implements two MPC controllers targeting the STM32L476RG (Cortex-M4F, 80 MHz, 128 KB SRAM):
 
-| Controller | Model | QP type | Typical solve time |
-|---|---|---|---|
-| **DCNN-MPC** | Input-Convex Neural Network (5-step horizon) | stability-reduced SCP | ~4 ms |
-| **Koopman-MPC** | Lifted-linear dynamics (7-step horizon) | Single QP | ~0.22 ms |
+| Controller | Model | QP type |
+|---|---|---|
+| **DCNN-MPC** | Input-Convex Neural Network (5-step horizon) | stability-reduced SCP |
+| **Koopman-MPC** | Lifted-linear dynamics (7-step horizon) | Single QP |
 
 ## Repository structure
 
