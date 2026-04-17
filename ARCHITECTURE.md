@@ -335,7 +335,7 @@ s,\, z &\geq 0
 \end{aligned}
 ```
 
-where $S = \operatorname{diag}(s)$, $Z = \operatorname{diag}(z)$, and
+where $S = \mathrm{diag}(s)$, $Z = \mathrm{diag}(z)$, and
 $e$ is the all-ones vector.
 
 **Log-barrier and central path.** Replace the $s \geq 0$ constraint with
@@ -377,7 +377,7 @@ system in $\Delta x$ alone:
 
 ```math
 (P + \rho I + G^\top \Sigma G + \delta^{-1} A^\top A)\, \Delta x = r,
-\qquad \Sigma = \operatorname{diag}(z_i / s_i)
+\qquad \Sigma = \mathrm{diag}(z_i / s_i)
 ```
 
 For the stable-neuron-reduced problem $n \approx 30$, so this is a
@@ -512,7 +512,7 @@ table below maps each PIQP feature to its location in the embedded code.
 | Row-major → col-major, symmetrise $P$, `P_REG` | `src/custom_ipm.cpp:store_problem`                | 111-166      | Also pairs equalities into inequalities (see §9). |
 | Ruiz equilibration                         | `src/custom_ipm.cpp:ruiz_equilibrate`                 | 168-253      | On by default for Koopman (`ruiz_iter = 10`); off for DCNN. |
 | $G$ sparsity analysis (CSC + CSR)          | `src/custom_ipm.cpp:analyze_sparsity`                 | 255-304      | CSC for $G^\top z$ / $Gx$; CSR for the $G^\top \Sigma G$ rank-1 update. |
-| Mehrotra warm-start $x_0 = -\operatorname{diag}(P)^{-1} q$ | `src/custom_ipm.cpp:initialize`        | 327-339      | Standard IPM cold-start; $s$, $z$ shifted positive. |
+| Mehrotra warm-start $x_0 = -\mathrm{diag}(P)^{-1} q$ | `src/custom_ipm.cpp:initialize`        | 327-339      | Standard IPM cold-start; $s$, $z$ shifted positive. |
 | Residuals + duality gap $\mu$              | `src/custom_ipm.cpp:compute_residuals`                | 381-440      | Fused $G^\top z$ + $Gx$ pass using CSC. |
 | KKT build $K = P + \rho I + G^\top \Sigma G$ | `src/custom_ipm.cpp:build_kkt`                      | 442-515      | Row-wise rank-1 via CSR; accumulation order preserves float32 precision. |
 | Bounded-$w$ clamp $w_i \geq 10^{-8}$       | `src/custom_ipm.cpp`                                  | 462-463      | Float32 fix — prevents barrier-weight overflow collapsing the LDL$^\top$ diagonal. |
