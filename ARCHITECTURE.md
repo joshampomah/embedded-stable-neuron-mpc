@@ -75,43 +75,49 @@ on the target.
 
 ### DCNN-MPC (ICNN + SCP)
 
-- Prediction is a DC decomposition
+**Prediction** is a DC decomposition:
 
-  ```math
-  \hat{y}_{k+i} = f_{i,1}(z_k,\, u_{k:k+i-1}) - f_{i,2}(z_k,\, u_{k:k+i-1})
-  ```
+```math
+\hat{y}_{k+i} = f_{i,1}(z_k,\, u_{k:k+i-1}) - f_{i,2}(z_k,\, u_{k:k+i-1})
+```
 
-  where each $`f_{i,k}`$ is an Input-Convex Neural Network (ICNN) with 32
-  hidden units. Non-negative internal weights + ReLU guarantee convexity,
-  and the DC form can express any smooth map (see report §modeling:dcnn).
-- Control is Successive Convex Programming (SCP): linearise $f_{i,2}$ at
-  the current nominal $u$, solve a convex QP, iterate until convergence
-  (typically 1–2 iterations).
-- **Pipeline files:**
-  - `src/scp_controller.cpp` — outer SCP loop, warm-start, convergence checks
-  - `src/icnn_forward.cpp`, `src/jacobian.cpp` — forward pass and
-    analytical Jacobian w.r.t. the control sequence
-  - `src/neuron_classifier.cpp` — interval-arithmetic classification of
-    each neuron as stably-active, stably-inactive, or unstable
-  - `src/qp_builder.cpp` — reduced-variable QP assembly from
-    classification output
+where each $`f_{i,k}`$ is an Input-Convex Neural Network (ICNN) with 32
+hidden units. Non-negative internal weights + ReLU guarantee convexity,
+and the DC form can express any smooth map (see report §modeling:dcnn).
+
+**Control** is Successive Convex Programming (SCP): linearise $`f_{i,2}`$
+at the current nominal $u$, solve a convex QP, iterate until convergence
+(typically 1–2 iterations).
+
+**Pipeline files:**
+
+- `src/scp_controller.cpp` — outer SCP loop, warm-start, convergence checks
+- `src/icnn_forward.cpp`, `src/jacobian.cpp` — forward pass and
+  analytical Jacobian w.r.t. the control sequence
+- `src/neuron_classifier.cpp` — interval-arithmetic classification of
+  each neuron as stably-active, stably-inactive, or unstable
+- `src/qp_builder.cpp` — reduced-variable QP assembly from
+  classification output
 
 ### Koopman-MPC (lifted-linear + single QP)
 
-- Prediction is an affine map over a lifted state
+**Prediction** is an affine map over a lifted state:
 
-  ```math
-  \hat{y}_{k+i} = e_i + F_{i,:}\, u, \qquad e_i = C A_i\, \psi(z_k)
-  ```
+```math
+\hat{y}_{k+i} = e_i + F_{i,:}\, u, \qquad e_i = C A_i\, \psi(z_k)
+```
 
-  with $`\psi(z) = [z,\, \phi(z)]`$ and $\phi$ learned as a linear
-  projection of 46 Lasso-selected features on the 30-D raw state (see
-  report §modeling:koopman).
-- No SCP — one QP per timestep, well-conditioned because both primal blocks
-  of $P$ carry meaningful cost.
-- **Pipeline files:**
-  - `src/koopman_encoder.cpp` — the 46-feature lift
-  - `src/koopman_controller.cpp` — QP build and solve
+with $`\psi(z) = [z,\, \phi(z)]`$ and $\phi$ learned as a linear
+projection of 46 Lasso-selected features on the 30-D raw state (see
+report §modeling:koopman).
+
+No SCP — one QP per timestep, well-conditioned because both primal blocks
+of $P$ carry meaningful cost.
+
+**Pipeline files:**
+
+- `src/koopman_encoder.cpp` — the 46-feature lift
+- `src/koopman_controller.cpp` — QP build and solve
 
 ### Shared backend
 
