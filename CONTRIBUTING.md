@@ -6,8 +6,8 @@ request for significant changes.
 ## Development setup
 
 ```bash
-git clone https://github.com/your-handle/embedded-condensed-mpc.git
-cd embedded-condensed-mpc
+git clone https://github.com/your-handle/embedded-stable-neuron-mpc.git
+cd embedded-stable-neuron-mpc
 pip install -e ".[dev]"
 pytest tests/ -v
 ```

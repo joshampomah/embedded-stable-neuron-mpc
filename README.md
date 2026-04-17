@@ -1,4 +1,4 @@
-# embedded-condensed-mpc
+# embedded-stable-neuron-mpc
 
 Embedded C++/Python stability-reduced QP solver for closed-loop deep brain stimulation (DBS).
 

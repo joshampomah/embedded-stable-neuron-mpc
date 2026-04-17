@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it using the metadata below."
 type: software
-title: "embedded-condensed-mpc: Embedded stability-reduced QP Solver for Closed-Loop DBS"
+title: "embedded-stable-neuron-mpc: Embedded stability-reduced QP Solver for Closed-Loop DBS"
 version: 0.1.0
 date-released: "2025-01-01"
 license: MIT

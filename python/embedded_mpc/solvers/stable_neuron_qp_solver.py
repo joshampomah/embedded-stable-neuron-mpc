@@ -1,4 +1,4 @@
-# Canonical owner: embedded-condensed-mpc
+# Canonical owner: embedded-stable-neuron-mpc
 """stability-reduced QP solver for DC-MPC with stable neuron elimination.
 
 Reduces the QP from ~670 variables to ~25-50 by classifying ICNN neurons as
