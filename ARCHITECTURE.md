@@ -77,9 +77,11 @@ on the target.
 
 - Prediction is a DC decomposition
 
-  $$\hat{y}_{k+i} = f_{i,1}(z_k,\, u_{k:k+i-1}) - f_{i,2}(z_k,\, u_{k:k+i-1})$$
+  ```math
+  \hat{y}_{k+i} = f_{i,1}(z_k,\, u_{k:k+i-1}) - f_{i,2}(z_k,\, u_{k:k+i-1})
+  ```
 
-  where each $f_{i,k}$ is an Input-Convex Neural Network (ICNN) with 32
+  where each $`f_{i,k}`$ is an Input-Convex Neural Network (ICNN) with 32
   hidden units. Non-negative internal weights + ReLU guarantee convexity,
   and the DC form can express any smooth map (see report §modeling:dcnn).
 - Control is Successive Convex Programming (SCP): linearise $f_{i,2}$ at
@@ -98,9 +100,11 @@ on the target.
 
 - Prediction is an affine map over a lifted state
 
-  $$\hat{y}_{k+i} = e_i + F_{i,:}\, u, \qquad e_i = C A_i\, \psi(z_k)$$
+  ```math
+  \hat{y}_{k+i} = e_i + F_{i,:}\, u, \qquad e_i = C A_i\, \psi(z_k)
+  ```
 
-  with $\psi(z) = [z,\, \phi(z)]$ and $\phi$ learned as a linear
+  with $`\psi(z) = [z,\, \phi(z)]`$ and $\phi$ learned as a linear
   projection of 46 Lasso-selected features on the 30-D raw state (see
   report §modeling:koopman).
 - No SCP — one QP per timestep, well-conditioned because both primal blocks
@@ -176,7 +180,9 @@ comment at the top of `compute_features` points there.
 
 The encoded state is then
 
-$$\psi(z) = [z,\; W_{\text{proj}}\, \text{features}(z) + b_{\text{proj}}]$$
+```math
+\psi(z) = [z,\; W_{\text{proj}}\, \text{features}(z) + b_{\text{proj}}]
+```
 
 which feeds directly into the Koopman QP build.
 
@@ -242,9 +248,11 @@ unstable, max ~17).
 ### Symbolic expression propagation — `src/qp_builder.cpp`
 
 Once classification is done, each layer's output can be written as an
-affine map of the reduced variable vector $x \in \mathbb{R}^{n_{\text{vars}}}$:
+affine map of the reduced variable vector $`x \in \mathbb{R}^{n_{\text{vars}}}`$:
 
-$$h_j = h_j^{\text{const}} + (h_j^{\text{coeff}})^\top x$$
+```math
+h_j = h_j^{\text{const}} + (h_j^{\text{coeff}})^\top x
+```
 
 Stably-active neurons contribute their pre-activation. Stably-inactive
 neurons contribute zero. Unstable neurons get an epigraph variable
@@ -294,13 +302,13 @@ target directly, and maps each PIQP feature to the embedded reimplementation.
 PIQP (Schwan et al. 2023) is a dense proximal-regularised interior-point
 solver for the standard convex QP:
 
-$$
+```math
 \begin{aligned}
 \min_{x} \quad & \tfrac{1}{2} x^\top P x + q^\top x \\
 \text{s.t.} \quad & A x = b \\
 & G x \leq h
 \end{aligned}
-$$
+```
 
 with $P \succeq 0$. It is written in C++ using Eigen, supports both dense
 and sparse backends, and is fast for small-to-medium problems.
@@ -311,7 +319,7 @@ and sparse backends, and is fast for small-to-medium problems.
 $G x + s = h$, dual multipliers $y$ for the equalities and $z \geq 0$
 for the inequalities. The KKT conditions are:
 
-$$
+```math
 \begin{aligned}
 P x + q + A^\top y + G^\top z &= 0 && \text{(stationarity)} \\
 A x - b &= 0 && \text{(primal eq)} \\
@@ -319,7 +327,7 @@ G x + s - h &= 0 && \text{(primal ineq)} \\
 S Z e &= 0 && \text{(complementarity)} \\
 s,\, z &\geq 0
 \end{aligned}
-$$
+```
 
 where $S = \operatorname{diag}(s)$, $Z = \operatorname{diag}(z)$, and
 $e$ is the all-ones vector.
@@ -335,7 +343,7 @@ perturbed KKT residual and solve for the update
 $(\Delta x,\, \Delta s,\, \Delta y,\, \Delta z)$. For a QP this gives
 the block system:
 
-$$
+```math
 \begin{bmatrix}
 P + \rho I & 0 & A^\top & G^\top \\
 0 & Z & 0 & S \\
@@ -345,7 +353,7 @@ G & I & 0 & 0
 \begin{bmatrix} \Delta x \\ \Delta s \\ \Delta y \\ \Delta z \end{bmatrix}
 = -
 \begin{bmatrix} r_d \\ r_{sz} \\ r_p \\ r_{\text{ineq}} \end{bmatrix}
-$$
+```
 
 The $\rho I$ block is the PMM primal regulariser (covered in §6.4); set
 $\rho = 0$ for the textbook version.
@@ -361,10 +369,10 @@ factor directly. Eliminate $\Delta s$ from the fourth block row
 second ($\Delta z = S^{-1}(r_{sz} - Z \Delta s)$) to get a reduced
 system in $\Delta x$ alone:
 
-$$
+```math
 (P + \rho I + G^\top \Sigma G + \delta^{-1} A^\top A)\, \Delta x = r,
 \qquad \Sigma = \operatorname{diag}(z_i / s_i)
-$$
+```
 
 For the stable-neuron-reduced problem $n \approx 30$, so this is a
 dense $30 \times 30$ LDL$^\top$ factorisation — trivially cheap.
@@ -376,9 +384,9 @@ $(x, s, z) \leftarrow (x, s, z) + \alpha \cdot (\Delta x, \Delta s, \Delta z)$
 with $\alpha \in (0, 1]$ chosen so that $s + \alpha \Delta s \geq 0$ and
 $z + \alpha \Delta z \geq 0$ strictly. A common choice is
 
-$$
+```math
 \alpha = \tau \cdot \max\{\alpha' \in (0, 1] : s + \alpha' \Delta s \geq 0,\; z + \alpha' \Delta z \geq 0\}
-$$
+```
 
 with $\tau = 0.99$.
 
@@ -397,33 +405,33 @@ second solve is nearly free.
 
 **Predictor.** Solve the system with $\sigma = 0$ (purely affine direction):
 
-$$
+```math
 K\, \Delta x^{\text{aff}} = r^{\text{aff}} \quad \longrightarrow \quad (\Delta s^{\text{aff}},\, \Delta z^{\text{aff}}) \; \text{by back-sub}
-$$
+```
 
 Compute the predicted step sizes $\alpha_s^{\text{aff}},\, \alpha_z^{\text{aff}}$
 from the fraction-to-boundary rule, and the predicted gap
 
-$$
+```math
 \mu_{\text{aff}} = \frac{(s + \alpha_s^{\text{aff}} \Delta s^{\text{aff}})^\top (z + \alpha_z^{\text{aff}} \Delta z^{\text{aff}})}{m}.
-$$
+```
 
 **Heuristic.** If the affine step made good progress
 ($\mu_{\text{aff}} \ll \mu$), trust it: take $\sigma$ small. If not,
 re-centre: take $\sigma$ near 1. Mehrotra's cubic rule:
 
-$$
+```math
 \sigma = \left(\frac{\mu_{\text{aff}}}{\mu}\right)^3
-$$
+```
 
 **Corrector.** The same $K$ is used with a new RHS that folds in both
 the centring target $\sigma \mu$ and a second-order correction
 $-\Delta s^{\text{aff}} \circ \Delta z^{\text{aff}}$ that cancels the
 $S Z e$ curvature the affine step couldn't see:
 
-$$
+```math
 r^s_{\text{corr}} = -S Z e - \Delta s^{\text{aff}} \circ \Delta z^{\text{aff}} + \sigma \mu e
-$$
+```
 
 Because $K$ is unchanged, the same LDL$^\top$ factor handles both
 solves. Net: two solves per factor $\approx$ halves the iteration count
@@ -445,9 +453,9 @@ $\rho \to 0$, so tightness is recoverable.
 standard barrier weight $w_i = z_i / s_i$ diverges, blowing the
 condition number of $G^\top \Sigma G$. PMM replaces it with
 
-$$
+```math
 w_i = \frac{z_i}{s_i + \delta\, z_i}, \qquad w_i \leq \frac{1}{\delta}.
-$$
+```
 
 Two benefits: $w_i$ is bounded, and the regularisation is dual to the
 primal $\rho I$ in the PMM framework. As $\delta \to 0$, the bounded
@@ -595,7 +603,9 @@ The Cortex-M4F `VFMA.F32` fused multiply-add is both faster (1 cycle vs 2)
 and more accurate (single rounding) — it's the right choice almost
 everywhere. The LDL$^\top$ diagonal update
 
-$$D_j = K_{jj} - \sum_{k < j} L_{jk}^2\, D_k$$
+```math
+D_j = K_{jj} - \sum_{k < j} L_{jk}^2\, D_k
+```
 
 is the one place where different rounding of the multiply-then-add
 matters in float32: the updated diagonal diverges by ULPs that compound
