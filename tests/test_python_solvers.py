@@ -1,4 +1,4 @@
-"""Tests for Python solver modules in embedded-stable-neuron-mpc."""
+"""Tests for Python solver modules in embedded-condensed-mpc."""
 from __future__ import annotations
 
 import importlib

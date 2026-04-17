@@ -1,4 +1,4 @@
-# Canonical owner: embedded-stable-neuron-mpc
+# Canonical owner: embedded-condensed-mpc
 """PIQP solver backend for DC-MPC.
 
 Uses the QPMatrixBuilder from direct_qp_solver.py and calls PIQP (Proximal

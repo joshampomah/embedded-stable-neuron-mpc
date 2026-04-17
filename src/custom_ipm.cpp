@@ -30,29 +30,26 @@ int CustomIPM::g_col_idx_[CustomIPM::MAX_G_NNZ];
 // Plain C math helpers (no Eigen)
 // ============================================================================
 
-// dst = 0
 static inline void vec_zero(Scalar* dst, int n) {
     std::memset(dst, 0, sizeof(Scalar) * n);
 }
 
-// dst = src
 static inline void vec_copy(Scalar* dst, const Scalar* src, int n) {
     std::memcpy(dst, src, sizeof(Scalar) * n);
 }
 
-// dot product
 static inline Scalar vec_dot(const Scalar* a, const Scalar* b, int n) {
     Scalar s = 0;
     for (int i = 0; i < n; ++i) s += a[i] * b[i];
     return s;
 }
 
-// dst += alpha * src
 static inline void vec_axpy(Scalar* dst, Scalar alpha, const Scalar* src, int n) {
     for (int i = 0; i < n; ++i) dst[i] += alpha * src[i];
 }
 
-// infinity norm (NaN-aware: returns huge value if any element is NaN)
+// NaN-aware: returns huge value if any element is NaN, so callers trip their
+// convergence/feasibility checks rather than propagating silently.
 static inline Scalar vec_inf_norm(const Scalar* v, int n) {
     Scalar mx = 0;
     for (int i = 0; i < n; ++i) {
@@ -64,7 +61,6 @@ static inline Scalar vec_inf_norm(const Scalar* v, int n) {
     return mx;
 }
 
-// Check if any element is NaN
 static inline bool vec_has_nan(const Scalar* v, int n) {
     for (int i = 0; i < n; ++i) {
         if (v[i] != v[i]) return true;
@@ -966,9 +962,10 @@ int CustomIPM::solve() {
         }
 
         // --- Delta scheduling: decay delta with complementarity progress ---
-        // As mu → 0, delta → 0, so the regularization vanishes at convergence.
-        // Follows PIQP's approach: delta *= (1 - mu_rate), where mu_rate is
-        // the fractional complementarity reduction this iteration.
+        // Follows PIQP: delta *= (1 - mu_rate), where mu_rate is the fractional
+        // complementarity reduction this iteration. The bounded-w perturbation
+        // vanishes at convergence. rho is NOT decayed — holding it at rho_init
+        // keeps LDLT pivots safely above the float32 clamp.
         if (m > 0) {
             Scalar mu_new = vec_dot(s_, z_, m) / Scalar(m);
             Scalar mu_rate = (mu_ > Scalar(1e-30))

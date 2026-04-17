@@ -6,6 +6,9 @@
 
 namespace stable_neuron {
 
+// Feature set and the specific indices below are Lasso-selected on Ramsey-RESET
+// residuals of the linear model — see §modeling:koopman of the accompanying
+// report (doc/ampomah_4yp_closed_loop_dbs.pdf) for the derivation.
 void KoopmanEncoder::compute_features(const KScalar* y, const KScalar* u,
                                        KScalar* features) const {
     int idx = 0;

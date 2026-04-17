@@ -1,4 +1,4 @@
-# embedded-stable-neuron-mpc
+# embedded-condensed-mpc
 
 Embedded C++/Python stability-reduced QP solver for closed-loop deep brain stimulation (DBS).
 
@@ -20,6 +20,7 @@ generated/                  Model config headers + demo weight headers
 python/embedded_mpc/        Python tooling (profiling, benchmarking)
 tests/                      Python pytest suite
 cmake/                      ARM cross-compilation toolchain file
+doc/                        Accompanying project report (PDF)
 ```
 
 ## Quick start: Python tooling
@@ -63,10 +64,29 @@ cmake --build build-arm -j4
 - **Koopman linearization**: 46 LASSO-selected analytical features lift the 30-dim state to a space where dynamics are (approximately) linear, enabling a single QP per timestep.
 - **float32 throughout**: All embedded computations use `float` (FPU-accelerated VMLA.F32 on Cortex-M4F).
 
+## Architecture
+
+For a code-level tour — project context, both controller pipelines, an
+interior-point methods primer from log-barrier through PMM, and a
+feature-by-feature mapping of PIQP to the custom IPM — see
+[`ARCHITECTURE.md`](ARCHITECTURE.md). That document is the right
+starting point for a code review; the `doc/` PDF covers experiments,
+results, and full derivations.
+
 ## Important: demo weights
 
 The weight files in `generated/` contain **randomly generated values** and will
 not produce meaningful control outputs. See `DISCLAIMER.md`.
+
+## Report
+
+The accompanying 4YP report, *Closed-loop Deep Brain Stimulation Using
+Machine Learning for Treatment of Parkinson's Disease*, is in
+[`doc/ampomah_4yp_closed_loop_dbs.pdf`](doc/ampomah_4yp_closed_loop_dbs.pdf).
+It derives the controllers, the stable-neuron elimination, and the
+float32 Mehrotra+PMM solver that this repo implements; section
+references in the code (e.g. `§modeling:koopman`, `§implementation:ipm`)
+point into it.
 
 ## License
 

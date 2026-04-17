@@ -1,4 +1,4 @@
-# Canonical owner: embedded-stable-neuron-mpc
+# Canonical owner: embedded-condensed-mpc
 """Centralized device configuration loader.
 
 Provides a single source of truth for all device parameters.

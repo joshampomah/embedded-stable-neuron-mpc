@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it using the metadata below."
 type: software
-title: "embedded-stable-neuron-mpc: Embedded stability-reduced QP Solver for Closed-Loop DBS"
+title: "embedded-condensed-mpc: Embedded stability-reduced QP Solver for Closed-Loop DBS"
 version: 0.1.0
 date-released: "2025-01-01"
 license: MIT
@@ -22,3 +22,14 @@ keywords:
   - Koopman operator
   - neural network
   - QP solver
+references:
+  - type: thesis
+    title: "Closed-loop Deep Brain Stimulation Using Machine Learning for Treatment of Parkinson's Disease"
+    authors:
+      - family-names: Ampomah
+        given-names: Joshua
+    thesis-type: "Final-year undergraduate project report"
+    institution:
+      name: "University of Oxford"
+    year: 2026
+    notes: "Included in this repository at doc/ampomah_4yp_closed_loop_dbs.pdf"

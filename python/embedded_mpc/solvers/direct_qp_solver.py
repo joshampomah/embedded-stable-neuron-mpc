@@ -1,4 +1,4 @@
-# Canonical owner: embedded-stable-neuron-mpc
+# Canonical owner: embedded-condensed-mpc
 """Direct QP solver for DC-MPC using CLARABEL.
 
 This bypasses CVXPY entirely by formulating the QP directly using CLARABEL's
