@@ -9,6 +9,17 @@ Implements two MPC controllers targeting the STM32L476RG (Cortex-M4F, 80 MHz, 12
 | **DCNN-MPC** | Input-Convex Neural Network (5-step horizon) | stability-reduced SCP |
 | **Koopman-MPC** | Lifted-linear dynamics (7-step horizon) | Single QP |
 
+## Repository map
+
+This repository is the embedded solver repo in a four-repo public code split:
+
+| Repository | Role |
+|---|---|
+| [closed-loop-dbs-bench](../closed-loop-dbs-bench) | Shared benchmark, synthetic plant, metrics, plotting utilities, bang-bang/PI/linear baselines |
+| [dcnn-tube-mpc-dbs](../dcnn-tube-mpc-dbs) | DC neural network tube MPC, SCP solver stack, uncertainty/tube-bound utilities |
+| [koopman-mpc-dbs](../koopman-mpc-dbs) | Koopman lifted-linear predictor, dense QP builder, Koopman MPC training/demo code |
+| [embedded-stable-neuron-mpc](../embedded-stable-neuron-mpc) | C++/STM32 implementation of the stable-neuron and Koopman QP solvers |
+
 ## Repository structure
 
 ```
@@ -83,7 +94,7 @@ not produce meaningful control outputs. See `DISCLAIMER.md`.
 The accompanying 4YP report, *Closed-loop Deep Brain Stimulation Using
 Machine Learning for Treatment of Parkinson's Disease*, is in
 [`doc/ampomah_4yp_closed_loop_dbs.pdf`](doc/ampomah_4yp_closed_loop_dbs.pdf).
-It derives the controllers, the stable-neuron elimination, and the
+This is the final A4 report PDF. It derives the controllers, the stable-neuron elimination, and the
 float32 Mehrotra+PMM solver that this repo implements; section
 references in the code (e.g. `§modeling:koopman`, `§implementation:ipm`)
 point into it.
