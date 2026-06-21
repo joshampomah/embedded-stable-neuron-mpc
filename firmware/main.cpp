@@ -158,8 +158,8 @@ int main() {
     }
     uart_putc('\n');
 
-    // 5a. Debug: show SCP result + IPM diagnostics
-    uart_puts("--- SCP Debug ---\n");
+    // 5a. Diagnostics: show SCP result + IPM residuals/timing.
+    uart_puts("--- SCP Diagnostics ---\n");
     uart_printf("  piqp_status=%d, piqp_iters=%d\n", prof.last_piqp_status, prof.last_piqp_iters);
     uart_printf("  n_vars=%d, n_eq=%d, n_ineq=%d\n", prof.last_n_vars, prof.last_n_eq, prof.last_n_ineq);
     // Print IPM diagnostics with NaN detection via raw bit patterns
@@ -215,7 +215,7 @@ int main() {
     uart_putc('\n');
 
     // 5. Validation: compare u_optimal against reference
-    // NOTE: use integer-based output (×1e6) to avoid double printf issues on ARM
+    // NOTE: use integer-based output (x1e6) to avoid double printf issues on ARM
     uart_puts("--- Validation ---\n");
 
     Scalar max_err = 0;

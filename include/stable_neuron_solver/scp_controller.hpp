@@ -65,7 +65,7 @@ struct SCPResult {
     float jacobian_time_us;     // All Jacobian computations
     float qp_time_us;           // All QP solves (build + solve)
 
-    // IPM debug diagnostics (from last QP solve)
+    // IPM solver diagnostics (from last QP solve)
     float ipm_r_dual_0;
     float ipm_r_eq_0;
     float ipm_r_ineq_0;
@@ -82,7 +82,7 @@ struct SCPResult {
     uint32_t ipm_recover_us;
     uint32_t ipm_linesearch_us;
 
-    // Debug: raw QP u_optimal from first SCP iteration (before validation)
+    // Diagnostic: raw QP u_optimal from first SCP iteration (before validation)
     Scalar debug_qp_u[N];
     int debug_validation_failed_idx;  // -1 if passed, else index of first failure
 };

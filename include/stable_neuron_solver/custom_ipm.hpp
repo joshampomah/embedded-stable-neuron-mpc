@@ -35,7 +35,7 @@ public:
         int status;       // 1=SOLVED, -1=MAX_ITER, -8=NUMERICS
         int iter;
         Scalar primal_obj;
-        // Debug diagnostics
+        // Solver diagnostics
         Scalar r_dual_0;     // dual residual norm (iteration 0)
         Scalar r_eq_0;       // eq residual norm (iteration 0)
         Scalar r_ineq_0;     // ineq residual norm (iteration 0)

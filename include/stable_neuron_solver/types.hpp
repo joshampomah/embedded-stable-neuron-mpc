@@ -58,14 +58,14 @@ struct SolverResult {
     int n_unstable;
     int piqp_status;   // PIQP status code (1=solved, -1=max_iter, -8=numerics, etc.)
     int piqp_iters;    // PIQP internal iteration count
-    Scalar diag_q0;    // q[0] for debugging QP matrix comparison
+    Scalar diag_q0;    // q[0] for QP matrix comparison diagnostics
     Scalar diag_P00;   // P[0,0]
     Scalar diag_G00;   // G[0,0]
     float classify_time_us;
     float build_time_us;
     float solve_time_us;
     float total_time_us;
-    // IPM debug diagnostics
+    // IPM solver diagnostics
     float ipm_r_dual_0;
     float ipm_r_eq_0;
     float ipm_r_ineq_0;

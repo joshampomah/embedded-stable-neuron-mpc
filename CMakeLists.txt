@@ -153,7 +153,7 @@ if(EMBEDDED_TARGET)
     )
     if(USE_CUSTOM_IPM)
         list(APPEND FMA_SOURCES src/solver.cpp)
-        # Note: custom_ipm.cpp excluded — its LDLT diverges with FMA on float32
+        # Note: custom_ipm.cpp excluded; its LDLT diverges with FMA on float32
     endif()
     set_source_files_properties(${FMA_SOURCES}
         PROPERTIES COMPILE_OPTIONS "-ffp-contract=fast"
