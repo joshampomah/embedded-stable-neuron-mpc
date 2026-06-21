@@ -126,6 +126,26 @@ Flashing/debugging depends on the local OpenOCD/ST-Link setup; see
 - `closed-loop-dbs-bench` is the common benchmark harness. This repo is for
   firmware and solver implementation details, not the main simulation study.
 
+## Using Your Own Models
+
+Private recordings are not loaded by this firmware repo directly. Train or fit
+models in `dcnn-tube-mpc-dbs` or `koopman-mpc-dbs`. Those Python repos can read
+processed patient folders containing `beta_causal_RMS.csv` and
+`stimulation.csv`, including folders produced from the 4YP raw `.mat`
+recordings. The 4YP recordings came from the Cambium/MRC BNDU dataset
+[STN local field potential recordings from awake patients with Parkinson's, ON
+and OFF meds, and during 130 Hz DBS](https://data.mrc.ox.ac.uk/stn-lfp-on-off-and-dbs),
+where registered/logged-in users can download or request access to the raw
+data. After training, export replacement C++ headers matching:
+
+- `include/stable_neuron_solver/weights.hpp` for DCNN/ICNN weights;
+- `include/stable_neuron_solver/koopman_types.hpp` for Koopman weights.
+
+The checked-in files under `generated/` are demo-safe placeholders, not
+patient-trained models. The benchmark repo has
+[DATA.md](https://github.com/joshampomah/closed-loop-dbs-bench/blob/master/DATA.md)
+for the raw `.mat` to processed-data workflow.
+
 ## Report And Architecture Notes
 
 Start with [ARCHITECTURE.md](ARCHITECTURE.md) for a code-level tour of the
