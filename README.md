@@ -1,63 +1,97 @@
 # embedded-stable-neuron-mpc
 
-Embedded C++/Python stability-reduced QP solver for closed-loop deep brain stimulation (DBS).
+Embedded C++ and Python implementation of the project MPC solvers for
+closed-loop deep brain stimulation (DBS).
 
-Implements two MPC controllers targeting the STM32L476RG (Cortex-M4F, 80 MHz, 128 KB SRAM):
+This repository is the systems/firmware part of the public code release. It
+contains the C++ solver code, STM32 bare-metal firmware, hardware-in-the-loop
+test programs, Python reference tooling, demo-safe generated weights, and the
+final project report PDF.
 
-| Controller | Model | QP type |
-|---|---|---|
-| **DCNN-MPC** | Input-Convex Neural Network (5-step horizon) | stability-reduced SCP |
-| **Koopman-MPC** | Lifted-linear dynamics (7-step horizon) | Single QP |
+This code is a research prototype. It is not a medical device and must not be
+used for clinical decision-making or patient treatment. See
+[DISCLAIMER.md](DISCLAIMER.md).
 
-## Repository map
+## Repository Set
 
-This repository is the embedded solver repo in a four-repo public code split:
+The project is split by responsibility:
 
-| Repository | Role |
+| Repository | Purpose |
 |---|---|
-| [closed-loop-dbs-bench](../closed-loop-dbs-bench) | Shared benchmark, synthetic plant, metrics, plotting utilities, bang-bang/PI/linear baselines |
-| [dcnn-tube-mpc-dbs](../dcnn-tube-mpc-dbs) | DC neural network tube MPC, SCP solver stack, uncertainty/tube-bound utilities |
-| [koopman-mpc-dbs](../koopman-mpc-dbs) | Koopman lifted-linear predictor, dense QP builder, Koopman MPC training/demo code |
-| [embedded-stable-neuron-mpc](../embedded-stable-neuron-mpc) | C++/STM32 implementation of the stable-neuron and Koopman QP solvers |
+| [closed-loop-dbs-bench](https://github.com/joshampomah/closed-loop-dbs-bench) | Shared benchmark, synthetic DBS plant, metrics, plotting utilities, bang-bang/PI/linear baselines |
+| [dcnn-tube-mpc-dbs](https://github.com/joshampomah/dcnn-tube-mpc-dbs) | DC neural network tube MPC method: predictor, SCP controller, uncertainty bounds, synthetic training/demo code |
+| [koopman-mpc-dbs](https://github.com/joshampomah/koopman-mpc-dbs) | Koopman MPC method: lifted-linear predictor, dense QP builder, OLS training/demo code |
+| [embedded-stable-neuron-mpc](https://github.com/joshampomah/embedded-stable-neuron-mpc) | C++/STM32 implementation of the stable-neuron and Koopman QP solvers, plus the final report PDF |
 
-## Repository structure
+Use the method repos to understand the Python controller designs. Use this repo
+to inspect how those controllers were reduced to an embedded C++/STM32
+implementation.
 
-```
-include/stable_neuron_solver/   C++ solver headers
-src/                        C++ solver sources
-firmware/                   STM32 bare-metal firmware
-test/                       HIL test binaries (stdin/stdout protocol)
-generated/                  Model config headers + demo weight headers
-python/embedded_mpc/        Python tooling (profiling, benchmarking)
-tests/                      Python pytest suite
-cmake/                      ARM cross-compilation toolchain file
-doc/                        Accompanying project report (PDF)
-```
+## What Is In This Repo
 
-## Quick start: Python tooling
+- `include/stable_neuron_solver/`: public C++ headers for the solver library.
+- `src/`: C++ implementation of ICNN forward passes, Jacobians, stable-neuron
+  classification, QP assembly, the custom IPM, and the Koopman controller.
+- `firmware/`: STM32L476RG bare-metal firmware entry points and board support.
+- `test/`: desktop/HIL-style C++ test binaries using stdin/stdout protocols.
+- `generated/`: model config headers and demo-safe generated weight headers.
+- `python/embedded_mpc/`: Python reference/profiling solver utilities.
+- `tests/`: pytest coverage for the Python tooling.
+- `cmake/`: ARM cross-compilation toolchain file.
+- `ARCHITECTURE.md`: code-level tour of the solver design and implementation.
+- `doc/ampomah_4yp_closed_loop_dbs.pdf`: final A4 4YP report PDF.
+
+## What Is Not In This Repo
+
+- No patient recordings.
+- No patient-trained weights.
+- No private report source or experiment archive.
+- No full Python benchmark suite; that lives in `closed-loop-dbs-bench`.
+
+The files in `generated/` and the firmware reference test cases contain
+synthetic randomly generated demo values. They are included so the code can
+compile and exercise the solver structure, not to reproduce the project's
+patient-data results.
+
+## Implemented Controllers
+
+| Controller | Model | Embedded optimization problem |
+|---|---|---|
+| DCNN-MPC | Input-convex neural network, 5-step horizon | Stability-reduced SCP QP |
+| Koopman-MPC | Lifted-linear model, 7-step horizon | Single dense QP |
+
+The target board used in the project was the STM32L476RG Cortex-M4F
+(80 MHz, 128 KB SRAM).
+
+## Installation: Python Tooling
+
+Requires Python 3.10-3.12.
 
 ```bash
 pip install -e ".[dev]"
 pytest tests/ -v
 ```
 
-Optional PIQP backend:
+Optional PIQP support:
 
 ```bash
 pip install -e ".[dev,piqp]"
 ```
 
-## Quick start: C++ (desktop)
+## Build: Desktop C++
 
 ```bash
 cmake -B build -DUSE_CUSTOM_IPM=ON
 cmake --build build -j4
-./build/hil_solver   # stdin/stdout HIL protocol
+./build/hil_solver
 ```
 
-## Quick start: ARM firmware
+`hil_solver` uses a simple stdin/stdout protocol intended for hardware-in-the-
+loop style testing.
 
-Requires `arm-none-eabi-gcc` toolchain:
+## Build: STM32 Firmware
+
+Requires an `arm-none-eabi-gcc` toolchain.
 
 ```bash
 cmake -B build-arm \
@@ -65,40 +99,55 @@ cmake -B build-arm \
   -DEMBEDDED_TARGET=ON \
   -DUSE_CUSTOM_IPM=ON
 cmake --build build-arm -j4
-# Flash with OpenOCD: see cmake/arm-none-eabi.cmake for target config
 ```
 
-## Key design decisions
+Flashing/debugging depends on the local OpenOCD/ST-Link setup; see
+`cmake/arm-none-eabi.cmake` for the expected target configuration.
 
-- **Stable neuron elimination**: Interval arithmetic over rate-constrained control bounds classifies ~96% of ICNN neurons as stable-active or stable-inactive, reducing the QP from ~670 variables to ~25-50.
-- **Custom Mehrotra IPM**: A hand-coded interior point method (no dynamic allocation, no exceptions) runs the stability-reduced QP on bare metal in 4 ms.
-- **Koopman linearization**: 46 LASSO-selected analytical features lift the 30-dim state to a space where dynamics are (approximately) linear, enabling a single QP per timestep.
-- **float32 throughout**: All embedded computations use `float` (FPU-accelerated VMLA.F32 on Cortex-M4F).
+## Key Design Points
 
-## Architecture
+- Stable-neuron elimination uses interval arithmetic over rate-constrained
+  control bounds to classify ICNN neurons as stable-active or stable-inactive.
+  This reduces the QP size before solving.
+- The custom solver is a float32 Mehrotra-style interior-point method with no
+  dynamic allocation and no exceptions in the embedded path.
+- The Koopman controller uses a 46-feature analytical lift so the MPC step is a
+  single QP.
+- The C++ implementation is intentionally explicit and fixed-size where
+  possible, reflecting the STM32 memory/performance constraints.
 
-For a code-level tour — project context, both controller pipelines, an
-interior-point methods primer from log-barrier through PMM, and a
-feature-by-feature mapping of PIQP to the custom IPM — see
-[`ARCHITECTURE.md`](ARCHITECTURE.md). That document is the right
-starting point for a code review; the `doc/` PDF covers experiments,
-results, and full derivations.
+## How This Relates To The Python Repos
 
-## Important: demo weights
+- `dcnn-tube-mpc-dbs` contains the Python DCNN/SCP controller logic. This repo
+  contains the C++ embedded version of the same controller family using
+  demo-safe generated weights.
+- `koopman-mpc-dbs` contains the Python Koopman model and dense QP controller.
+  This repo contains the C++ embedded implementation of the Koopman path.
+- `closed-loop-dbs-bench` is the common benchmark harness. This repo is for
+  firmware and solver implementation details, not the main simulation study.
 
-The weight files in `generated/` contain **randomly generated values** and will
-not produce meaningful control outputs. See `DISCLAIMER.md`.
+## Report And Architecture Notes
 
-## Report
+Start with [ARCHITECTURE.md](ARCHITECTURE.md) for a code-level tour of the
+embedded implementation.
 
-The accompanying 4YP report, *Closed-loop Deep Brain Stimulation Using
-Machine Learning for Treatment of Parkinson's Disease*, is in
+The final 4YP report is included at
 [`doc/ampomah_4yp_closed_loop_dbs.pdf`](doc/ampomah_4yp_closed_loop_dbs.pdf).
-This is the final A4 report PDF. It derives the controllers, the stable-neuron elimination, and the
-float32 Mehrotra+PMM solver that this repo implements; section
-references in the code (e.g. `§modeling:koopman`, `§implementation:ipm`)
-point into it.
+It contains the derivations, experiment discussion, and full project context.
+
+## Tests
+
+```bash
+pytest tests/ -v
+```
+
+The GitHub Actions workflow runs the Python tests. Hardware-in-the-loop tests
+require the physical STM32 setup and are not part of CI.
+
+## Citation
+
+See [CITATION.cff](CITATION.cff).
 
 ## License
 
-MIT — see `LICENSE`.
+MIT. See [LICENSE](LICENSE).
