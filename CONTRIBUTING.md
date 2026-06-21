@@ -1,16 +1,8 @@
 # Contributing
 
-Contributions are welcome. Please open an issue before submitting a pull
-request for significant changes.
-
-## Development setup
-
-```bash
-git clone https://github.com/your-handle/embedded-stable-neuron-mpc.git
-cd embedded-stable-neuron-mpc
-pip install -e ".[dev]"
-pytest tests/ -v
-```
+This repository archives the code for a completed research project. We are not
+actively accepting external contributions, but bug reports and questions are
+welcome via GitHub Issues.
 
 ## Code style
 
